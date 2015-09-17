@@ -333,12 +333,11 @@ module TSOS {
             _StdOut.putText(" " + "92.96 million miles from the sun");
         }
 
-        public shellCoord(args) {
+        public shellCoord(args, :) {
 
-            var coord : coord = new coord;
+            var coord;
 
-          //  _StdOut. = coord;
-            _StdOut.putText("you are located " + coord.toString());
+            _StdOut.accuracy("you are located " + .Out.accuracy.toString());
         }
     }
 }
