@@ -1,4 +1,4 @@
-///<reference path="../globals.ts" />
+ ///<reference path="../globals.ts" />
 
 /* ------------
      Console.ts
@@ -85,7 +85,26 @@ module TSOS {
                                      _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
                                      _FontHeightMargin;
 
-            // TODO: Handle scrolling. (iProject 1)
-        }
+                        if(this.currentYPosition > _Canvas.height)
+            {
+
+            var yPos = _DefaultFontSize +
+                       _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
+                       _FontHeightMargin;
+
+             // TODO: Handle scrolling. (iProject 1)
+
+            this.currentYPos -= yPos;
+
+     _DrawingContext.getImageData(0, yPos, _Canvas.width, this.currentYPosition);
+            
+
+   /* _DrawingContext.clearRect(0, 0, _Canvas.width, _Canvas.height); */
+
+      this.clearScreen();
+
+    _DrawingContext.putImageData(0, 0, _Canvas.width, _Canvas.height);
     }
- }
+   }
+  }
+}

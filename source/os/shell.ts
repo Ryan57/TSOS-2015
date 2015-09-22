@@ -264,6 +264,8 @@ module TSOS {
                         _StdOut.putText("whereami displays the approximate location from the sun.");
                         break;
                     // TODO: Make descriptive MANual page entries for the the rest of the shell commands here.
+                    case "date":
+                        _StdOut.putText("Displays the current date and time.");
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
