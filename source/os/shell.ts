@@ -94,9 +94,14 @@ module TSOS {
                 "- Displays your current distance from the sun.");
             this.commandList[this.commandList.length] = sc;
 
-            sc = new ShellCommand(this.shellCoord,
-                "coord",
-                "- Displays your current location.");
+            sc = new ShellCommand(this.shellCool,
+                "cool",
+                "- Displays the coolest professor!");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellDarthTrap,
+                "darthtrap",
+                "- Displays an error message!");
             this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -263,9 +268,16 @@ module TSOS {
                     case "whereami":
                         _StdOut.putText("whereami displays the approximate location from the sun.");
                         break;
+                    case "cool":
+                        _StdOut.putText("cool displays who the coolest professor is!");
+                        break;
+                    case "darthtrap":
+                        _StdOut.putText("Displays an error message!");
+                        break;
                     // TODO: Make descriptive MANual page entries for the the rest of the shell commands here.
                     case "date":
                         _StdOut.putText("Displays the current date and time.");
+                        break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -330,17 +342,17 @@ module TSOS {
         }
 
         public shellwhereami(args) {
-            var whereami;
-
             _StdOut.putText(" " + "92.96 million miles from the sun");
         }
 
-        public shellCoord(args) {
+        public shellCool(args) {
+            _StdOut.putText("who's the coolest professor? " + " " + "Alan Laboseur!");
+        }
 
-            var coord : coord = new coord;
+        public shellDarthTrap(args) {
 
-          //  _StdOut. = coord;
-            _StdOut.putText("you are located " + coord.toString());
+            _Kernel.krnTrapError(args.join(' '));
+
         }
     }
 }
