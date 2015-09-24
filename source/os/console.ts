@@ -20,43 +20,46 @@ module TSOS {
                     public buffer = "") {
         }
 
-        public init(): void {
+        public init():void {
             this.clearScreen();
             this.resetXY();
         }
 
-        private clearScreen(): void {
+        private clearScreen():void {
             _DrawingContext.clearRect(0, 0, _Canvas.width, _Canvas.height);
         }
 
-        private resetXY(): void {
+        private resetXY():void {
             this.currentXPosition = 0;
             this.currentYPosition = this.currentFontSize;
         }
 
-        public handleInput(): void {
+        public handleInput():void {
             while (_KernelInputQueue.getSize() > 0) {
                 // Get the next character from the kernel input queue.
                 var chr = _KernelInputQueue.dequeue();
                 // Check to see if it's "special" (enter or ctrl-c) or "normal" (anything else that the keyboard device driver gave us).
-                if (chr === String.fromCharCode(13))
-                { //     Enter key
+                if (chr === String.fromCharCode(13)) { //     Enter key
                     // The enter key marks the end of a console command, so ...
                     // ... tell the shell ...
                     _OsShell.handleInput(this.buffer);
                     // ... and reset our buffer.
                     this.buffer = "";
                 }
-                else if(chr == String.fromCharCode(8))
-                {
+                else if (chr == String.fromCharCode(8)) {
                     var bkSpc = _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer.charAt(this.buffer.length - 1));
-                                    this.currentXPosition = this.currentXPosition - bkSpc;
+                    //creat var bkSpc to take last value in buffer, this finds the most recent character typed which is also the one we want backspaced
 
-                                _DrawingContext.clearRect(this.currentXPosition, this.currentYPosition - _DefaultFontSize, bkSpc, _DefaultFontSize + _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) + 2);
-                                    
-                 }
-                 else
-                 {
+                    this.currentXPosition = this.currentXPosition - bkSpc;
+                    //subtracts bkSpc from the current position of x on the CLI
+
+                    _DrawingContext.clearRect(this.currentXPosition, this.currentYPosition - _DefaultFontSize, bkSpc, _DefaultFontSize + _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) + 2);
+                    //clears the space of the last character in the buffer, accounting for any extra space taken below the rect by a: j or g
+
+                    this.buffer = this.buffer.substr(0, this.buffer.length - 1);
+                    //finds last character in buffer
+                }
+                else {
                     // This is a "normal" character, so ...
                     // ... draw it on the screen...
                     this.putText(chr);
@@ -67,7 +70,7 @@ module TSOS {
             }
         }
 
-        public putText(text): void {
+        public putText(text):void {
             // My first inclination here was to write two functions: putChar() and putString().
             // Then I remembered that JavaScript is (sadly) untyped and it won't differentiate
             // between the two.  So rather than be like PHP and write two (or more) functions that
@@ -83,41 +86,49 @@ module TSOS {
                 var offset = _DrawingContext.measureText(this.currentFont, this.currentFontSize, text);
                 this.currentXPosition = this.currentXPosition + offset;
             }
-         }
+        }
 
-        public advanceLine(): void {
+        public advanceLine():void {
             this.currentXPosition = 0;
             /*
              * Font size measures from the baseline to the highest point in the font.
              * Font descent measures from the baseline to the lowest point in the font.
              * Font height margin is extra spacing between the lines.
              */
-            this.currentYPosition += _DefaultFontSize + 
-                                     _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
-                                     _FontHeightMargin;
+            this.currentYPosition += _DefaultFontSize +
+                _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
+                _FontHeightMargin;
 
-                        if(this.currentYPosition > _Canvas.height)
-            {
+            if (this.currentYPosition > _Canvas.height) {
 
-          var yPos = _DefaultFontSize +
-                       _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
-                       _FontHeightMargin;
+                var yPos = _DefaultFontSize +
+                           _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
+                           _FontHeightMargin;
 
-             // TODO: Handle scrolling. (iProject 1)
+                // TODO: Handle scrolling. (iProject 1)
 
-          var dwnScroll = _DrawingContext.getImageData(0, yPos, _Canvas.width, this.currentYPosition);
+                var dwnScroll = _DrawingContext.getImageData(0, yPos, _Canvas.width, this.currentYPosition);
+                // created dwnScroll variable, which stores the Image data from the canvas when the y position exceeds _Canvas.height
 
-            this.currentYPosition -= yPos;
+                this.currentYPosition -= yPos;
 
-     _DrawingContext.getImageData(0, yPos, _Canvas.width, this.currentYPosition);
+                _DrawingContext.getImageData(0, yPos, _Canvas.width, this.currentYPosition);
 
 
-   /* _DrawingContext.clearRect(0, 0, _Canvas.width, _Canvas.height); */
+                this.clearScreen();
+                //clears screen to redraw the canvas at an appropriate height for user to continue typing and viewing results
 
-      this.clearScreen();
+                _DrawingContext.putImageData(dwnScroll, 0, 0);
+                //Pastes or redraws the canvas image in a "scrolled up" fassion, allowing users to see beyond scope of canvas length
+            }
+        }
+        public darthScreen(darthErrMsg : string) : void {
 
-    _DrawingContext.putImageData(dwnScroll, 0, 0);
+
+                    _DrawingContext.fillStyle = "blue";                                  //Sets the color of the canvas to blue
+
+                    _DrawingContext.fillRect(0, 0, _Canvas.width, _Canvas.height);      //Fills the canvas with this color change
+
+                    var darthErrMsg = "Error, you have exceeded the boundaries of the system. Reset the OS, or refresh the page.";
     }
-   }
-  }
 }
