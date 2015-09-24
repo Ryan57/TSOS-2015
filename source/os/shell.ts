@@ -103,6 +103,17 @@ module TSOS {
                 "darthtrap",
                 "- Displays an error message!");
             this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellStatChange,
+                "statchange",
+                "- Displays current OS status");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellLoad,
+                "load",
+                "- Ensures valid hex digits and spaces");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -274,9 +285,15 @@ module TSOS {
                     case "darthtrap":
                         _StdOut.putText("Displays an error message!");
                         break;
+                    case "statchange":
+                        _StdOut.putText("Displays the current OS status.");
+                        break;
                     // TODO: Make descriptive MANual page entries for the the rest of the shell commands here.
                     case "date":
                         _StdOut.putText("Displays the current date and time.");
+                        break;
+                    case "load":
+                        _StdOut.putText("Checks for valid Hex digits.");
                         break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
@@ -350,8 +367,30 @@ module TSOS {
         }
 
         public shellDarthTrap(args) {
+            if( args.length > 0)
+                _Kernel.krnTrapError(args.join(' '));
+            else
+                _StdOut.putText("Usage: darthtrap <message> Please supply and error message.")
 
-            _Kernel.krnTrapError(args.join(' '));
+        }
+        public shellStatChange(args) {
+            if( args.length > 0)
+                Control.curStat(args.join(' '));
+            else
+                _StdOut.putText("Usage: statchange <status> Please enter a status.")
+
+        }
+
+        public shellLoad(args) {
+            var input : string = (<HTMLInputElement>document.getElementById("taProgramInput")).value;
+
+            if( input.trim().length == 0)
+                _StdOut.putText("No program input found");
+            else if( input.match("[^a-fA-F0-9 ]+"))
+                _StdOut.putText("Non hex digits entered");
+            else
+                _StdOut.putText("Valid code");
+
 
         }
     }
