@@ -130,5 +130,12 @@ module TSOS {
                     _DrawingContext.fillRect(0, 0, _Canvas.width, _Canvas.height);      //Fills the canvas with this color change
 
                     var darthErrMsg = "Error, you have exceeded the boundaries of the system. Reset the OS, or refresh the page.";
+
+                     _DrawingContext.font = this.currentFont;           //accesses current font on darthScreen
+                     _DrawingContext.fillStyle = "white";               //Changes the font style to white
+                     _DrawingContext.fillText(darthErrMsg, 10, 10);     //Places the font lower on the screen, making it visible
+
+
+        }
     }
 }
