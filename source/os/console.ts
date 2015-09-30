@@ -53,7 +53,8 @@ module TSOS {
                     this.currentXPosition = this.currentXPosition - bkSpc;
                     //subtracts bkSpc from the current position of x on the CLI
 
-                    _DrawingContext.clearRect(this.currentXPosition, this.currentYPosition - _DefaultFontSize, bkSpc, _DefaultFontSize + _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) + 2);
+                    _DrawingContext.clearRect(this.currentXPosition, this.currentYPosition - _DefaultFontSize, bkSpc,
+                                              _DefaultFontSize + _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) + 2);
                     //clears the space of the last character in the buffer, accounting for any extra space taken below the rect by a: j or g
 
                     this.buffer = this.buffer.substr(0, this.buffer.length - 1);
@@ -102,8 +103,8 @@ module TSOS {
             if (this.currentYPosition > _Canvas.height) {
 
                 var yPos = _DefaultFontSize +
-                           _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
-                           _FontHeightMargin;
+                    _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
+                    _FontHeightMargin;
 
                 // TODO: Handle scrolling. (iProject 1)
 
@@ -122,19 +123,19 @@ module TSOS {
                 //Pastes or redraws the canvas image in a "scrolled up" fassion, allowing users to see beyond scope of canvas length
             }
         }
+
         public darthScreen(darthErrMsg : string) : void {
 
 
-                    _DrawingContext.fillStyle = "blue";                                  //Sets the color of the canvas to blue
+            _DrawingContext.fillStyle = "blue";                                  //Sets the color of the canvas to blue
 
-                    _DrawingContext.fillRect(0, 0, _Canvas.width, _Canvas.height);      //Fills the canvas with this color change
+            _DrawingContext.fillRect(0, 0, _Canvas.width, _Canvas.height);      //Fills the canvas with this color change
 
-                    var darthErrMsg = "Error, you have exceeded the boundaries of the system. Reset the OS, or refresh the page.";
+            var darthErrMsg = "Error, you have exceeded the boundaries of the system. Reset the OS, or refresh the page.";
 
-                     _DrawingContext.font = this.currentFont;           //accesses current font on darthScreen
-                     _DrawingContext.fillStyle = "white";               //Changes the font style to white
-                     _DrawingContext.fillText(darthErrMsg, 10, 10);     //Places the font lower on the screen, making it visible
-
+            _DrawingContext.font = this.currentFont;
+            _DrawingContext.fillStyle = "white";
+            _DrawingContext.fillText(darthErrMsg, 10, 10);
 
         }
     }
