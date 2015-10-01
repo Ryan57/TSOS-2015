@@ -49,7 +49,6 @@ module TSOS {
 
             this.curStat("stand-by");
 
-
             // Check for our testing and enrichment core, which
             // may be referenced here (from index.html) as function Glados().
             if (typeof Glados === "function") {
@@ -73,6 +72,8 @@ module TSOS {
             // Update the log console.
             var taLog = <HTMLInputElement> document.getElementById("taHostLog");
             taLog.value = str + taLog.value;
+
+
 
             // TODO in the future: Optionally update a log database or some streaming service.
         }
@@ -103,7 +104,7 @@ module TSOS {
             _Kernel.krnBootstrap();  // _GLaDOS.afterStartup() will get called in there, if configured.
 
             this.curStat("Started");
-       }
+        }
 
         public static hostBtnHaltOS_click(btn): void {
             Control.hostLog("Emergency halt", "host");

@@ -26,7 +26,7 @@ var TSOS;
             //
             // Load the command list.
             // ver
-            sc = new TSOS.ShellCommand(this.shellVer, "ver", "- Displays the current version data.");
+            sc = new TSOS.ShellCommand(this.shellVer, "ver", "- Displays current version data for this OS.");
             this.commandList[this.commandList.length] = sc;
             // help
             sc = new TSOS.ShellCommand(this.shellHelp, "help", "- This is the help command. Seek help.");
@@ -48,6 +48,20 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             // prompt <string>
             sc = new TSOS.ShellCommand(this.shellPrompt, "prompt", "<string> - Sets the prompt.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellTest, "test", "<string> - test command");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellDate, "date", "- Displays the current date and time.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellwhereami, "whereami", "- Displays your current distance from the sun.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellCool, "cool", "- Displays the coolest professor!");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellDarthTrap, "darthtrap", "- Displays an error message!");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellStatChange, "statchange", "- Displays current OS status");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellLoad, "load", "- Ensures valid hex digits and spaces");
             this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -169,7 +183,7 @@ var TSOS;
             }
         };
         Shell.prototype.shellVer = function (args) {
-            _StdOut.putText(APP_NAME + " version " + APP_VERSION);
+            _StdOut.putText(" AdaptOS " + " version " + " 0.0.1 " + " -under development by Ryan Owens ");
         };
         Shell.prototype.shellHelp = function (args) {
             _StdOut.putText("Commands:");
@@ -193,9 +207,30 @@ var TSOS;
                 var topic = args[0];
                 switch (topic) {
                     case "help":
-                        _StdOut.putText("Help displays a list of (hopefully) valid commands.");
+                        _StdOut.putText("Help displays a list of comprehensive valid commands.");
+                        break;
+                    case "ver":
+                        _StdOut.putText("Ver displays the current OS version running.");
+                        break;
+                    case "whereami":
+                        _StdOut.putText("whereami displays the approximate location from the sun.");
+                        break;
+                    case "cool":
+                        _StdOut.putText("cool displays who the coolest professor is!");
+                        break;
+                    case "darthtrap":
+                        _StdOut.putText("Displays an error message!");
+                        break;
+                    case "statchange":
+                        _StdOut.putText("Displays the current OS status.");
                         break;
                     // TODO: Make descriptive MANual page entries for the the rest of the shell commands here.
+                    case "date":
+                        _StdOut.putText("Displays the current date and time.");
+                        break;
+                    case "load":
+                        _StdOut.putText("Checks for valid Hex digits.");
+                        break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -245,6 +280,42 @@ var TSOS;
             else {
                 _StdOut.putText("Usage: prompt <string>  Please supply a string.");
             }
+        };
+        Shell.prototype.shellTest = function (args) {
+            _StdOut.putText("here is test text.");
+            _StdOut.advanceLine();
+            _StdOut.putText("other text");
+        };
+        Shell.prototype.shellDate = function (args) {
+            var date = new Date();
+            _StdOut.putText(date.toDateString() + " " + date.toTimeString());
+        };
+        Shell.prototype.shellwhereami = function (args) {
+            _StdOut.putText(" " + "92.96 million miles from the sun");
+        };
+        Shell.prototype.shellCool = function (args) {
+            _StdOut.putText("who's the coolest professor? " + " " + "Alan Laboseur!");
+        };
+        Shell.prototype.shellDarthTrap = function (args) {
+            if (args.length > 0)
+                _Kernel.krnTrapError(args.join(' '));
+            else
+                _StdOut.putText("Usage: darthtrap <message> Please supply and error message.");
+        };
+        Shell.prototype.shellStatChange = function (args) {
+            if (args.length > 0)
+                TSOS.Control.curStat(args.join(' '));
+            else
+                _StdOut.putText("Usage: statchange <status> Please enter a status.");
+        };
+        Shell.prototype.shellLoad = function (args) {
+            var input = document.getElementById("taProgramInput").value;
+            if (input.trim().length == 0)
+                _StdOut.putText("No program input found");
+            else if (input.match("[^a-fA-F0-9 ]+"))
+                _StdOut.putText("Non hex digits entered");
+            else
+                _StdOut.putText("Valid code");
         };
         return Shell;
     })();

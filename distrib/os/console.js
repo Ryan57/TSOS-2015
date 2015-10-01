@@ -45,6 +45,15 @@ var TSOS;
                     // ... and reset our buffer.
                     this.buffer = "";
                 }
+                else if (chr == String.fromCharCode(8)) {
+                    var bkSpc = _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer.charAt(this.buffer.length - 1));
+                    //creat var bkSpc to take last value in buffer, this finds the most recent character typed which is also the one we want backspaced
+                    this.currentXPosition = this.currentXPosition - bkSpc;
+                    //subtracts bkSpc from the current position of x on the CLI
+                    _DrawingContext.clearRect(this.currentXPosition, this.currentYPosition - _DefaultFontSize, bkSpc, _DefaultFontSize + _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) + 2);
+                    //clears the space of the last character in the buffer, accounting for any extra space taken below the rect by a: j or g
+                    this.buffer = this.buffer.substr(0, this.buffer.length - 1);
+                }
                 else {
                     // This is a "normal" character, so ...
                     // ... draw it on the screen...
@@ -81,7 +90,27 @@ var TSOS;
             this.currentYPosition += _DefaultFontSize +
                 _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
                 _FontHeightMargin;
-            // TODO: Handle scrolling. (iProject 1)
+            if (this.currentYPosition > _Canvas.height) {
+                var yPos = _DefaultFontSize +
+                    _DrawingContext.fontDescent(this.currentFont, this.currentFontSize) +
+                    _FontHeightMargin;
+                // TODO: Handle scrolling. (iProject 1)
+                var dwnScroll = _DrawingContext.getImageData(0, yPos, _Canvas.width, this.currentYPosition);
+                // created dwnScroll variable, which stores the Image data from the canvas when the y position exceeds _Canvas.height
+                this.currentYPosition -= yPos;
+                _DrawingContext.getImageData(0, yPos, _Canvas.width, this.currentYPosition);
+                this.clearScreen();
+                //clears screen to redraw the canvas at an appropriate height for user to continue typing and viewing results
+                _DrawingContext.putImageData(dwnScroll, 0, 0);
+            }
+        };
+        Console.prototype.darthScreen = function (darthErrMsg) {
+            _DrawingContext.fillStyle = "blue"; //Sets the color of the canvas to blue
+            _DrawingContext.fillRect(0, 0, _Canvas.width, _Canvas.height); //Fills the canvas with this color change
+            var darthErrMsg = "Error, you have exceeded the boundaries of the system. Reset the OS, or refresh the page.";
+            _DrawingContext.font = this.currentFont;
+            _DrawingContext.fillStyle = "white";
+            _DrawingContext.fillText(darthErrMsg, 10, 10);
         };
         return Console;
     })();
