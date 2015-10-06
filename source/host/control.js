@@ -77,6 +77,7 @@ var TSOS;
             // ... Create and initialize the CPU (because it's part of the hardware)  ...
             _CPU = new Cpu(); // Note: We could simulate multi-core systems by instantiating more than one instance of the CPU here.
             _CPU.init(); //       There's more to do, like dealing with scheduling and such, but this would be a start. Pretty cool.
+            _Memory = new TSOS.memory(); //Instantiate memory object
             // ... then set the host clock pulse ...
             _hardwareClockID = setInterval(Devices.hostClockPulse, CPU_CLOCK_INTERVAL);
             // .. and call the OS Kernel Bootstrap routine.
@@ -105,6 +106,12 @@ var TSOS;
             var curDate = new Date();
             document.getElementById("statusdisplay").innerHTML = curDate.toDateString() + " "
                 + curDate.toTimeString() + " " + status;
+        };
+        Control.createTable = function () {
+            var memTable = document.getElementById("MemTable");
+            var memRow = memTable.insertRow();
+            var memCell = memRow.insertCell();
+            memCell.innerHTML = "<b>0x000</b>";
         };
         return Control;
     })();

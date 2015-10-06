@@ -97,6 +97,7 @@ module TSOS {
             _CPU = new Cpu();  // Note: We could simulate multi-core systems by instantiating more than one instance of the CPU here.
             _CPU.init();       //       There's more to do, like dealing with scheduling and such, but this would be a start. Pretty cool.
 
+            _Memory = new TSOS.memory();  //Instantiate memory object
             // ... then set the host clock pulse ...
             _hardwareClockID = setInterval(Devices.hostClockPulse, CPU_CLOCK_INTERVAL);
             // .. and call the OS Kernel Bootstrap routine.
@@ -131,6 +132,13 @@ module TSOS {
                 + curDate.toTimeString() + " " + status;
 
 
+        }
+
+        public static createTable(): void {
+            var memTable : HTMLTableElement = (<HTMLTableElement>document.getElementById("MemTable"));
+            var memRow : HTMLTableRowElement = (<HTMLTableRowElement>memTable.insertRow());
+            var memCell : HTMLTableCellElement = (<HTMLTableCellElement>memRow.insertCell());
+            memCell.innerHTML = "<b>0x000</b>";
         }
     }
 }
