@@ -29,7 +29,7 @@ var TSOS;
         Control.hostInit = function () {
             // This is called from index.html's onLoad event via the onDocumentLoad function pointer.
             // Get a global reference to the canvas.  TODO: Should we move this stuff into a Display Device Driver?
-            _Canvas = document.getElementById('display');
+            _Canvas = document.getElementById("display");
             // Get a global reference to the drawing context.
             _DrawingContext = _Canvas.getContext("2d");
             // Enable the added-in canvas text functions (see canvastext.ts for provenance and details).
@@ -40,7 +40,7 @@ var TSOS;
             // Set focus on the start button.
             // Use the TypeScript cast to HTMLInputElement
             document.getElementById("btnStartOS").focus();
-            this.curStat("stand-by");
+            this.hostCurStat("stand-by");
             // Check for our testing and enrichment core, which
             // may be referenced here (from index.html) as function Glados().
             if (typeof Glados === "function") {
@@ -83,7 +83,7 @@ var TSOS;
             // .. and call the OS Kernel Bootstrap routine.
             _Kernel = new Kernel();
             _Kernel.krnBootstrap(); // _GLaDOS.afterStartup() will get called in there, if configured.
-            this.curStat("Started");
+            this.hostCurStat("Started");
         };
         Control.hostBtnHaltOS_click = function (btn) {
             Control.hostLog("Emergency halt", "host");
@@ -93,7 +93,7 @@ var TSOS;
             // Stop the interval that's simulating our clock pulse.
             clearInterval(_hardwareClockID);
             // TODO: Is there anything else we need to do here?
-            this.curStat("Halted");
+            this.hostCurStat("Halted");
         };
         Control.hostBtnReset_click = function (btn) {
             // The easiest and most thorough way to do this is to reload (not refresh) the document.
@@ -102,16 +102,17 @@ var TSOS;
             // be reloaded from the server. If it is false or not specified the browser may reload the
             // page from its cache, which is not what we want.
         };
-        Control.curStat = function (status) {
+        Control.hostCurStat = function (status) {
             var curDate = new Date();
             document.getElementById("statusdisplay").innerHTML = curDate.toDateString() + " "
-                + curDate.toTimeString() + " " + status;
+                + curDate.toTimeString() + " OS Status- " + status;
         };
         Control.createTable = function () {
             var memTable = document.getElementById("MemTable");
             var memRow = memTable.insertRow();
             var memCell = memRow.insertCell();
             memCell.innerHTML = "<b>0x000</b>";
+            // For loop cycling through all memory ( 0 to mem max)
         };
         return Control;
     })();

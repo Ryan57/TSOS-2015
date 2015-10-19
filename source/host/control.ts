@@ -27,11 +27,11 @@ module TSOS {
 
     export class Control {
 
-        public static hostInit(): void {
+        public static hostInit():void {
             // This is called from index.html's onLoad event via the onDocumentLoad function pointer.
 
             // Get a global reference to the canvas.  TODO: Should we move this stuff into a Display Device Driver?
-            _Canvas = <HTMLCanvasElement>document.getElementById('display');
+            _Canvas = <HTMLCanvasElement>document.getElementById("display");
 
             // Get a global reference to the drawing context.
             _DrawingContext = _Canvas.getContext("2d");
@@ -41,13 +41,13 @@ module TSOS {
 
             // Clear the log text box.
             // Use the TypeScript cast to HTMLInputElement
-            (<HTMLInputElement> document.getElementById("taHostLog")).value="";
+            (<HTMLInputElement> document.getElementById("taHostLog")).value = "";
 
             // Set focus on the start button.
             // Use the TypeScript cast to HTMLInputElement
             (<HTMLInputElement> document.getElementById("btnStartOS")).focus();
 
-            this.curStat("stand-by");
+            this.hostCurStat("stand-by");
 
             // Check for our testing and enrichment core, which
             // may be referenced here (from index.html) as function Glados().
@@ -59,20 +59,19 @@ module TSOS {
             }
         }
 
-        public static hostLog(msg: string, source: string = "?"): void {
+        public static hostLog(msg:string, source:string = "?"):void {
             // Note the OS CLOCK.
-            var clock: number = _OSclock;
+            var clock:number = _OSclock;
 
             // Note the REAL clock in milliseconds since January 1, 1970.
-            var now: number = new Date().getTime();
+            var now:number = new Date().getTime();
 
             // Build the log string.
-            var str: string = "({ clock:" + clock + ", source:" + source + ", msg:" + msg + ", now:" + now  + " })"  + "\n";
+            var str:string = "({ clock:" + clock + ", source:" + source + ", msg:" + msg + ", now:" + now + " })" + "\n";
 
             // Update the log console.
             var taLog = <HTMLInputElement> document.getElementById("taHostLog");
             taLog.value = str + taLog.value;
-
 
 
             // TODO in the future: Optionally update a log database or some streaming service.
@@ -82,7 +81,7 @@ module TSOS {
         //
         // Host Events
         //
-        public static hostBtnStartOS_click(btn): void {
+        public static hostBtnStartOS_click(btn):void {
             // Disable the (passed-in) start button...
             btn.disabled = true;
 
@@ -98,16 +97,21 @@ module TSOS {
             _CPU.init();       //       There's more to do, like dealing with scheduling and such, but this would be a start. Pretty cool.
 
             _Memory = new TSOS.memory();  //Instantiate memory object
+
             // ... then set the host clock pulse ...
             _hardwareClockID = setInterval(Devices.hostClockPulse, CPU_CLOCK_INTERVAL);
             // .. and call the OS Kernel Bootstrap routine.
             _Kernel = new Kernel();
             _Kernel.krnBootstrap();  // _GLaDOS.afterStartup() will get called in there, if configured.
 
-            this.curStat("Started");
+            this.hostCurStat("Started");
+
+            this.hostCurStat("before mem tbl");
+            this.createMemTable();
+            this.hostCurStat("after mem tbl");
         }
 
-        public static hostBtnHaltOS_click(btn): void {
+        public static hostBtnHaltOS_click(btn):void {
             Control.hostLog("Emergency halt", "host");
             Control.hostLog("Attempting Kernel shutdown.", "host");
             // Call the OS shutdown routine.
@@ -115,10 +119,10 @@ module TSOS {
             // Stop the interval that's simulating our clock pulse.
             clearInterval(_hardwareClockID);
             // TODO: Is there anything else we need to do here?
-            this.curStat("Halted");
+            this.hostCurStat("Halted");
         }
 
-        public static hostBtnReset_click(btn): void {
+        public static hostBtnReset_click(btn):void {
             // The easiest and most thorough way to do this is to reload (not refresh) the document.
             location.reload(true);
             // That boolean parameter is the 'forceget' flag. When it is true it causes the page to always
@@ -126,19 +130,61 @@ module TSOS {
             // page from its cache, which is not what we want.
         }
 
-        public static curStat(status : string): void {
+        public static hostCurStat(status:string):void {
             var curDate = new Date();
-            (<HTMLElement> document.getElementById("statusdisplay")).innerHTML = curDate.toDateString() + " "
-                + curDate.toTimeString() + " " + status;
+            (<HTMLElement>document.getElementById("statusdisplay")).innerHTML = curDate.toDateString() + " "
+                + curDate.toTimeString() + " OS Status- " + status;
 
 
         }
 
-        public static createTable(): void {
-            var memTable : HTMLTableElement = (<HTMLTableElement>document.getElementById("MemTable"));
-            var memRow : HTMLTableRowElement = (<HTMLTableRowElement>memTable.insertRow());
-            var memCell : HTMLTableCellElement = (<HTMLTableCellElement>memRow.insertCell());
-            memCell.innerHTML = "<b>0x000</b>";
+        public static createMemTable():void {
+            var memHeader: number = 0;
+            var memTable:HTMLTableElement = (<HTMLTableElement>document.getElementById("MemTable"));
+            var memRow:HTMLTableRowElement = (<HTMLTableRowElement>memTable.insertRow());
+            var memCell:HTMLTableCellElement = (<HTMLTableCellElement>memRow.insertCell());
+            memCell.innerHTML = "<b>0x0</b>";
+
+            this.hostCurStat("here");
+            // For loop cycling through all memory ( 0 to mem max)
+            for (var i = 0; i < _MemMax; i++)
+            {
+             if(i % 8 == 0 && i != 0)
+                {
+                memHeader += 8;
+                memRow = (<HTMLTableRowElement>memTable.insertRow());
+                memCell = (<HTMLTableCellElement>memRow.insertCell());
+                memCell.innerHTML = "<b> 0x" + memHeader.toString(16) + "</b>"
+                }
+
+                memCell = (<HTMLTableCellElement>memRow.insertCell());
+                memCell.innerHTML = _Memory.getMem(i).toString(16);
+
+            }
+            this.hostCurStat("there");
+        }
+
+        public static updateTable():void {
+            var memTable:HTMLTableElement = (<HTMLTableElement>document.getElementById("MemTable"));
+            var memRow:HTMLTableRowElement = null;
+            var memCell:HTMLTableCellElement = null;
+            var rowNum: number = 0;
+            var cellNum: number = 1;
+
+            for (var i = 0; i < _MemMax; i++)
+                       {
+                        if(i % 8 == 0)
+                           {
+                           memRow = (<HTMLTableRowElement>memTable.rows[rowNum]);
+                           rowNum++;
+                           cellNum == 1;
+                           }
+
+                           memCell = (<HTMLTableCellElement>memRow.cells[cellNum]);
+                           memCell.innerHTML = "0x" + _Memory.getMem(i).toString(16);
+                           cellNum++;
+
+                       }
         }
     }
 }

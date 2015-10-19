@@ -2,6 +2,7 @@
 ///<reference path="../utils.ts" />
 ///<reference path="shellCommand.ts" />
 ///<reference path="userCommand.ts" />
+///<reference path="..\host\control.ts"/>
 /* ------------
    Shell.ts
 
@@ -183,7 +184,7 @@ var TSOS;
             }
         };
         Shell.prototype.shellVer = function (args) {
-            _StdOut.putText(" AdaptOS " + " version " + " 0.0.1 " + " -under development by Ryan Owens ");
+            _StdOut.putText(APP_NAME + " version " + APP_VERSION);
         };
         Shell.prototype.shellHelp = function (args) {
             _StdOut.putText("Commands:");
@@ -304,7 +305,7 @@ var TSOS;
         };
         Shell.prototype.shellStatChange = function (args) {
             if (args.length > 0)
-                TSOS.Control.curStat(args.join(' '));
+                TSOS.Control.hostCurStat(args.join(' '));
             else
                 _StdOut.putText("Usage: statchange <status> Please enter a status.");
         };

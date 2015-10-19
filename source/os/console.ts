@@ -46,6 +46,7 @@ module TSOS {
                     // ... and reset our buffer.
                     this.buffer = "";
                 }
+                // need a case for tab, and up and down arrow keys
                 else if (chr == String.fromCharCode(8)) {
                     var bkSpc = _DrawingContext.measureText(this.currentFont, this.currentFontSize, this.buffer.charAt(this.buffer.length - 1));
                     //creat var bkSpc to take last value in buffer, this finds the most recent character typed which is also the one we want backspaced

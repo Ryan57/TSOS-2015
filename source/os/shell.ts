@@ -2,6 +2,7 @@
 ///<reference path="../utils.ts" />
 ///<reference path="shellCommand.ts" />
 ///<reference path="userCommand.ts" />
+///<reference path="..\host\control.ts"/>
 
 
 /* ------------
@@ -242,7 +243,7 @@ module TSOS {
         }
 
         public shellVer(args) {
-            _StdOut.putText(" AdaptOS " + " version " + " 0.0.1 " + " -under development by Ryan Owens ");
+            _StdOut.putText(APP_NAME + " version " + APP_VERSION);
 
         }
 
@@ -375,7 +376,7 @@ module TSOS {
         }
         public shellStatChange(args) {
             if( args.length > 0)
-                Control.curStat(args.join(' '));
+                Control.hostCurStat(args.join(' '));
             else
                 _StdOut.putText("Usage: statchange <status> Please enter a status.")
 
