@@ -30,12 +30,26 @@ const MEMORY_ACCESS_VIOLATION_IRQ: number = 5;
 
 const OVERFLOW_IRQ: number = 6;
 
+const INVALID_OP_CODE_IRQ: number = 7;
+
+const UNEXPECTED_TERMINATION_IRQ: number = 8;
+
+const PRINT_TEXT_IRQ: number = 9;
+
+const PRINT_NUMBER_IRQ: number = 10;
+
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
 //
 var _Memory: TSOS.memory;
+var _MemoryManager: TSOS.MemoryManager;
 var _MemMax: number = 256;
+var _MemPartitionSize = 256;
+
+var _Scheduler: TSOS.scheduler;
+
+var _pcb: TSOS.PCB;
 
 //var _Control: TSOS.Control;
 
@@ -66,6 +80,8 @@ var _StdOut;
 // UI
 var _Console: TSOS.Console;
 var _OsShell: TSOS.Shell;
+var _Control: TSOS.Control;
+var _Utils: TSOS.Utils;
 
 // At least this OS is not trying to kill you. (Yet.)
 var _SarcasticMode: boolean = false;

@@ -24,7 +24,8 @@ module TSOS {
                 return this.mem[index];
             }
 
-            public setMem(val : number, index : number) {
+            public setMem(val : number, index : number)
+            {
                 if(index < 0 || index >= this.length)
                     throw new RangeError("Memory allocation is out of bounds.");
 
@@ -33,5 +34,7 @@ module TSOS {
                         this.mem[index] = val;
 
         }
+
+
     }
 }

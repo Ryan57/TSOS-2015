@@ -43,5 +43,15 @@ module TSOS {
             }
             return retVal;
         }
+
+        public static padWithZeros(str:string,num:number) : string
+        {
+            var newstr : string = str;
+
+            while( newstr.length < num)
+                newstr = '0' + newstr;
+
+            return newstr;
+        }
     }
 }

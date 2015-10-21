@@ -106,9 +106,10 @@ module TSOS {
 
             this.hostCurStat("Started");
 
-            this.hostCurStat("before mem tbl");
+
             this.createMemTable();
-            this.hostCurStat("after mem tbl");
+            this.createCPUTable();
+
         }
 
         public static hostBtnHaltOS_click(btn):void {
@@ -145,7 +146,6 @@ module TSOS {
             var memCell:HTMLTableCellElement = (<HTMLTableCellElement>memRow.insertCell());
             memCell.innerHTML = "<b>0x0</b>";
 
-            this.hostCurStat("here");
             // For loop cycling through all memory ( 0 to mem max)
             for (var i = 0; i < _MemMax; i++)
             {
@@ -154,17 +154,17 @@ module TSOS {
                 memHeader += 8;
                 memRow = (<HTMLTableRowElement>memTable.insertRow());
                 memCell = (<HTMLTableCellElement>memRow.insertCell());
-                memCell.innerHTML = "<b> 0x" + memHeader.toString(16) + "</b>"
+                memCell.innerHTML = "<b> 0x" + TSOS.Utils.padWithZeros(memHeader.toString(16),4) + "</b>"
                 }
 
                 memCell = (<HTMLTableCellElement>memRow.insertCell());
-                memCell.innerHTML = _Memory.getMem(i).toString(16);
+                memCell.innerHTML = TSOS.Utils.padWithZeros(_Memory.getMem(i).toString(16),2);
 
             }
-            this.hostCurStat("there");
+
         }
 
-        public static updateTable():void {
+        public static updateMemTable():void {
             var memTable:HTMLTableElement = (<HTMLTableElement>document.getElementById("MemTable"));
             var memRow:HTMLTableRowElement = null;
             var memCell:HTMLTableCellElement = null;
@@ -172,19 +172,63 @@ module TSOS {
             var cellNum: number = 1;
 
             for (var i = 0; i < _MemMax; i++)
-                       {
-                        if(i % 8 == 0)
-                           {
-                           memRow = (<HTMLTableRowElement>memTable.rows[rowNum]);
-                           rowNum++;
-                           cellNum == 1;
-                           }
+            {
+                if(i % 8 == 0)
+                {
+                    memRow = (<HTMLTableRowElement>memTable.rows.item(rowNum));
+                    rowNum++;
+                    cellNum = 1;
+                }
 
-                           memCell = (<HTMLTableCellElement>memRow.cells[cellNum]);
-                           memCell.innerHTML = "0x" + _Memory.getMem(i).toString(16);
-                           cellNum++;
+                memCell = (<HTMLTableCellElement>memRow.cells.item(cellNum));
+                memCell.innerHTML = TSOS.Utils.padWithZeros(_Memory.getMem(i).toString(16),2);
+                cellNum++;
 
-                       }
+            }
+        }
+
+        // Updates cpu display table
+        public static updateCPUTable() : void
+        {
+            // Inits
+            var tbl = (<HTMLTableElement>document.getElementById("CPU"));
+            var row = (<HTMLTableRowElement>tbl.rows.item(1));
+
+            // Set register data
+            (<HTMLTableCellElement>row.cells.item(0)).innerHTML = TSOS.Utils.padWithZeros(_CPU.PC.toString(16),2);
+            (<HTMLTableCellElement>row.cells.item(1)).innerHTML = TSOS.Utils.padWithZeros(_CPU.Acc.toString(16),2);
+            (<HTMLTableCellElement>row.cells.item(2)).innerHTML = TSOS.Utils.padWithZeros(_CPU.Xreg.toString(16),2);
+            (<HTMLTableCellElement>row.cells.item(3)).innerHTML = TSOS.Utils.padWithZeros(_CPU.Yreg.toString(16),2);
+            (<HTMLTableCellElement>row.cells.item(4)).innerHTML = TSOS.Utils.padWithZeros(_CPU.Zflag.toString(16),2);
+            (<HTMLTableCellElement>row.cells.item(5)).innerHTML = TSOS.Utils.padWithZeros(_CPU.base.toString(16),4);
+            (<HTMLTableCellElement>row.cells.item(6)).innerHTML = TSOS.Utils.padWithZeros(_CPU.limit.toString(16),4);
+
+        }
+
+
+        public static createCPUTable() : void
+        {
+            var tbl = (<HTMLTableElement>document.getElementById("CPU"));
+            var hdr = (<HTMLTableRowElement>tbl.insertRow());
+            var row : HTMLTableRowElement = (<HTMLTableRowElement>tbl.insertRow());
+
+            // Create header
+            hdr.insertCell().innerHTML = '<b>' + 'PC' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Acc' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'X Reg' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Y Reg' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Z Flag' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Base' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
+
+            // Create cpu reg data
+            row.insertCell().innerHTML = TSOS.Utils.padWithZeros(_CPU.PC.toString(16),2);
+            row.insertCell().innerHTML = TSOS.Utils.padWithZeros(_CPU.Acc.toString(16),2);
+            row.insertCell().innerHTML = TSOS.Utils.padWithZeros(_CPU.Xreg.toString(16),2);
+            row.insertCell().innerHTML = TSOS.Utils.padWithZeros(_CPU.Yreg.toString(16),2);
+            row.insertCell().innerHTML = TSOS.Utils.padWithZeros(_CPU.Zflag.toString(16),2);
+            row.insertCell().innerHTML = TSOS.Utils.padWithZeros(_CPU.base.toString(16),4);
+            row.insertCell().innerHTML = TSOS.Utils.padWithZeros(_CPU.limit.toString(16),4);
         }
     }
 }

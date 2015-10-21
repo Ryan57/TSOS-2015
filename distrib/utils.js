@@ -44,6 +44,12 @@ var TSOS;
             }
             return retVal;
         };
+        Utils.padWithZeros = function (str, num) {
+            var newstr = str;
+            while (newstr.length < num)
+                newstr = '0' + newstr;
+            return newstr;
+        };
         return Utils;
     })();
     TSOS.Utils = Utils;

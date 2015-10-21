@@ -17,7 +17,12 @@
     <script type="text/javascript" src="distrib/host/cpu.js"></script>
     <script type="text/javascript" src="distrib/host/memory.js"></script>
 
+
     <!-- Virtual OS Routines: Make sure Kernel code is last, since it needs those above it. -->
+    <script type="text/javascript" src="distrib/os/pcb.js"></script>
+    <script type="text/javascript" src="distrib/os/memory.js"></script>
+    <script type="text/javascript" src="distrib/os/scheduler.js"></script>
+    <script type="text/javascript" src="distrib/os/MemoryManager.js"></script>
     <script type="text/javascript" src="distrib/os/interrupt.js"></script>
     <script type="text/javascript" src="distrib/os/canvastext.js"></script>
     <script type="text/javascript" src="distrib/os/console.js"></script>
@@ -32,6 +37,7 @@
     <!-- Other Routines -->
     <script type="text/javascript" src="distrib/utils.js"></script>
     <!-- Uncomment this line below to enable GLaDOS testing -->
+
     <script type="text/javascript" src="http://www.labouseur.com/courses/os/projects/glados.js"></script>
 </head>
 
@@ -91,7 +97,7 @@
         </label>
     </div>
 
-    <div id="divMemTable" style="margin:7px; height:200px; width:260px; float:left; background-color:white; overflow:auto;">
+    <div id="divMemTable" style="margin:7px; height:200px; width:277px; float:left; background-color:white; overflow:auto;">
         <label>
             Memory
         </label>
@@ -104,47 +110,7 @@
             CPU Registers
         </label>
         <br>
-        <table id="CPU" border="2" height="200" width="107">
-            <tr>
-                <td>
-                    PC
-                </td>
-                <td id="PC">
-                    0x00
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    ACC
-                </td>
-                <td id="ACC">
-                    0x00
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    X Reg
-                </td>
-                <td id="XReg">
-                    0x00
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    Y Reg
-                </td>
-                <td id="YReg">
-                    0x00
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    Z Flag
-                </td>
-                <td id="ZFlag">
-                    0x0
-                </td>
-            </tr>
+        <table id="CPU" border="2" height="117" width="150">
         </table>
     </div>
     <div id="divUserProgramInput" style="margin:7px; float:left;">

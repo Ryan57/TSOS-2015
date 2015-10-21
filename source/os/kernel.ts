@@ -1,5 +1,6 @@
 ///<reference path="../globals.ts" />
 ///<reference path="queue.ts" />
+///<reference path="pcb.ts" />
 
 /* ------------
      Kernel.ts
@@ -53,6 +54,10 @@ module TSOS {
             this.krnTrace("Creating and Launching the shell.");
             _OsShell = new Shell();
             _OsShell.init();
+
+            // Create memory manager
+            _MemoryManager = new TSOS.MemoryManager();
+            _Scheduler = new TSOS.scheduler();
 
             // Finally, initiate student testing protocol.
             if (_GLaDOS) {
@@ -128,11 +133,54 @@ module TSOS {
                     break;
 
                 case CREATE_PROCESS_IRQ:
+                     var pcb : TSOS.PCB = _Scheduler.createProcess(params);
+                    if(pcb == null)
+                        _OsShell.outPutMsg("Process is already loaded. ");
+                    else
+                        _OsShell.outPutMsg("Process has been loaded with PID: " + pcb.PID.toString());
                      break;
+
                 case EXECUTE_PROCESS_IRQ:
+                    var retVal : boolean = _Scheduler.executeProcess(params);
+                    if(retVal == false)
+                        _OsShell.outPutMsg("No process loaded with PID: " + params.toString());
+                    else
+                        _OsShell.outPutMsg("Executing process with PID: " + params.toString());
                      break;
+
                 case TERMINATE_PROCESS_IRQ:
+                    var pcb : TSOS.PCB =_Scheduler.terminateProcess();
+                    _OsShell.outPutMsg("Terminating process with PID: " + pcb.PID.toString());
                      break;
+
+                case MEMORY_ACCESS_VIOLATION_IRQ:
+                    _OsShell.outPutMsg("Memory access violation to address 0x" + params.toString(16));
+                    _Scheduler.terminateProcess();
+                    break;
+
+                case OVERFLOW_IRQ:
+                    _OsShell.outPutMsg("Arithmatic overflow at instruction 0x" + params.toString(16));
+                    _Scheduler.terminateProcess();
+                    break;
+
+                case INVALID_OP_CODE_IRQ:
+                    _OsShell.outPutMsg("Invalid Op Code 0x" + params.toString(16));
+                    _Scheduler.terminateProcess();
+                    break;
+
+                case UNEXPECTED_TERMINATION_IRQ:
+                    _OsShell.outPutMsg("Unexpected program termination.");
+                    _Scheduler.terminateProcess();
+                    break;
+
+                case PRINT_TEXT_IRQ:
+                    _OsShell.outPutMsg(params);
+                    break;
+
+                case PRINT_NUMBER_IRQ:
+                    _OsShell.outPutMsg(params.toString());
+                    break;
+
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
             }
@@ -158,6 +206,13 @@ module TSOS {
         // - WriteFile
         // - CloseFile
 
+        public printText(text : string): void {
+            _KernelInterruptQueue.enqueue(new Interrupt(PRINT_TEXT_IRQ,text));
+        }
+
+        public printNumber(num : number): void {
+            _KernelInterruptQueue.enqueue(new Interrupt(PRINT_NUMBER_IRQ,num));
+        }
 
         //
         // OS Utility Routines

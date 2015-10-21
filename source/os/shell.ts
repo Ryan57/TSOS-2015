@@ -115,6 +115,11 @@ module TSOS {
                 "- Ensures valid hex digits and spaces");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellRun,
+                "run",
+                "<number>- Runs a desired process command by <number>.");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -209,6 +214,37 @@ module TSOS {
             return retVal;
         }
 
+        public outPutMsg(msg : string) : void
+        {
+            if( _Console.buffer.length == 0 )
+            {
+                // Print msg (this.putText)
+                _Console.putText(msg);
+
+                // Advance line
+                _Console.advanceLine();
+
+                // Print prompt
+                this.putPrompt();
+            }
+            else {
+                // Advance line
+                _Console.advanceLine();
+
+                // Print msg (this.putText)
+                _Console.putText(msg);
+
+                // Advance line
+                _Console.advanceLine();
+
+                // Print prompt
+                this.putPrompt();
+
+                // Print this.buffer
+                _Console.putText(_Console.buffer);
+            }
+        }
+
         //
         // Shell Command Functions.  Kinda not part of Shell() class exactly, but
         // called from here, so kept here to avoid violating the law of least astonishment.
@@ -296,6 +332,8 @@ module TSOS {
                     case "load":
                         _StdOut.putText("Checks for valid Hex digits.");
                         break;
+                    case "run":
+                        _StdOut.putText("Run's a desired process by inputting run pid.")
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -387,12 +425,58 @@ module TSOS {
 
             if( input.trim().length == 0)
                 _StdOut.putText("No program input found");
-            else if( input.match("[^a-fA-F0-9 ]+"))
+            else if( input.match("[^a-f|A-F|0-9| ]+"))
                 _StdOut.putText("Non hex digits entered");
             else
-                _StdOut.putText("Valid code");
+            {
+                // Trim white space
+                var whiteSpaceRegEx : RegExp = new RegExp("[ ]+");
+                var bytes : string[] = input.split(whiteSpaceRegEx);
+                var rawInput : string = bytes.join('');
+
+                // Check if over 512 characters (256 bytes)
+                if( rawInput.length > 512)
+
+                    // Tell user program input too long
+                    _StdOut.putText("Program input over 256 bytes.");
+
+                // Else
+                else
+                {
+
+                    // Standardize input (two charactes , space, two characters ....)
+                    var byte : string;
+                    var stdInput : string = "";
+                    for( var i = 0; i < rawInput.length; i += 2)
+                    {
+                        byte = rawInput[i];
+                        if( i + 1 < rawInput.length)
+                            byte += rawInput[i + 1];
+                        else
+                            byte += "0";
+
+                        if( i > 0)
+                            stdInput += ' ';
+                        stdInput += byte;
+                    }
+
+                    // Send the create process interrupt
+                    _KernelInterruptQueue.enqueue(new Interrupt(CREATE_PROCESS_IRQ,stdInput));
+                }
+
+            }
 
 
         }
+
+        public shellRun(args) {
+            if(args.length == 0)
+            _StdOut.putText("Usage - run <pid>");
+
+            else {
+                _KernelInterruptQueue.enqueue(new Interrupt(EXECUTE_PROCESS_IRQ, parseInt(args[0])));
+
+            }
+    }
     }
 }
