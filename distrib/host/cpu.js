@@ -270,30 +270,31 @@ var TSOS;
                     this.SYS(limit);
                     break;
                 case '0':
-                    _KernelInterruptQueue.enqueue(new TSOS.Interrupt(TERMINATE_PROCESS_IRQ, null));
+                    _Kernel.terminateProcessFromBase(this.base);
                     this.isExecuting = false;
                     break;
                 default:
                     this.invalidOpCode(inst);
                     break;
             }
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(TIMER_IRQ, null));
             TSOS.Control.updateMemTable();
             TSOS.Control.updateCPUTable();
         };
         Cpu.prototype.memAccessViolation = function (address) {
-            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, address));
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(MEMORY_ACCESS_VIOLATION_IRQ, [address, this.base]));
             this.isExecuting = false;
         };
         Cpu.prototype.overFlow = function (address) {
-            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(OVERFLOW_IRQ, address));
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(OVERFLOW_IRQ, [address, this.base]));
             this.isExecuting = false;
         };
         Cpu.prototype.invalidOpCode = function (opCode) {
-            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(INVALID_OP_CODE_IRQ, opCode));
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(INVALID_OP_CODE_IRQ, [opCode, this.base]));
             this.isExecuting = false;
         };
         Cpu.prototype.abnormalTermination = function () {
-            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(UNEXPECTED_TERMINATION_IRQ, null));
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(UNEXPECTED_TERMINATION_IRQ, this.base));
             this.isExecuting = false;
         };
         Cpu.prototype.convertLittleEndian = function (address) {

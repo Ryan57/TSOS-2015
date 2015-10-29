@@ -123,31 +123,36 @@ var TSOS;
                         _OsShell.outPutMsg("Process has been loaded with PID: " + pcb.PID.toString());
                     break;
                 case EXECUTE_PROCESS_IRQ:
+                    this.krnTrace("here 1");
                     var retVal = _Scheduler.executeProcess(params);
+                    this.krnTrace("here 2");
                     if (retVal == false)
                         _OsShell.outPutMsg("No process loaded with PID: " + params.toString());
                     else
                         _OsShell.outPutMsg("Executing process with PID: " + params.toString());
                     break;
                 case TERMINATE_PROCESS_IRQ:
-                    var pcb = _Scheduler.terminateProcess();
-                    _OsShell.outPutMsg("Terminating process with PID: " + pcb.PID.toString());
+                    var pcb = _Scheduler.terminateProcess(params);
+                    if (pcb != null)
+                        _OsShell.outPutMsg("Terminating process with PID: " + pcb.PID.toString());
+                    else
+                        _OsShell.outPutMsg("No process with PID: " + pcb.PID.toString() + " is running.");
                     break;
                 case MEMORY_ACCESS_VIOLATION_IRQ:
-                    _OsShell.outPutMsg("Memory access violation to address 0x" + params.toString(16));
-                    _Scheduler.terminateProcess();
+                    _OsShell.outPutMsg("Memory access violation to address 0x" + params[0].toString(16));
+                    _Scheduler.terminateProcess(_Scheduler.findPID(params[1]));
                     break;
                 case OVERFLOW_IRQ:
-                    _OsShell.outPutMsg("Arithmatic overflow at instruction 0x" + params.toString(16));
-                    _Scheduler.terminateProcess();
+                    _OsShell.outPutMsg("Arithmatic overflow at instruction 0x" + params[0].toString(16));
+                    _Scheduler.terminateProcess(_Scheduler.findPID(params[1]));
                     break;
                 case INVALID_OP_CODE_IRQ:
-                    _OsShell.outPutMsg("Invalid Op Code 0x" + params.toString(16));
-                    _Scheduler.terminateProcess();
+                    _OsShell.outPutMsg("Invalid Op Code 0x" + params[0].toString(16));
+                    _Scheduler.terminateProcess(_Scheduler.findPID(params[1]));
                     break;
                 case UNEXPECTED_TERMINATION_IRQ:
                     _OsShell.outPutMsg("Unexpected program termination.");
-                    _Scheduler.terminateProcess();
+                    _Scheduler.terminateProcess(_Scheduler.findPID(params));
                     break;
                 case PRINT_TEXT_IRQ:
                     _OsShell.outPutMsg(params);
@@ -155,11 +160,20 @@ var TSOS;
                 case PRINT_NUMBER_IRQ:
                     _OsShell.outPutMsg(params.toString());
                     break;
+                case CONTEXT_SWITCH_IRQ:
+                    _Scheduler.contextSwitch();
+                    break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
             }
         };
         Kernel.prototype.krnTimerISR = function () {
+            // Increase timer counter
+            _timerCount++;
+            if (_timerCount == _quantum) {
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CONTEXT_SWITCH_IRQ, null));
+                _timerCount = 0;
+            }
             // The built-in TIMER (not clock) Interrupt Service Routine (as opposed to an ISR coming from a device driver). {
             // Check multiprogramming parameters and enforce quanta here. Call the scheduler / context switch here if necessary.
         };
@@ -182,6 +196,10 @@ var TSOS;
         };
         Kernel.prototype.printNumber = function (num) {
             _KernelInterruptQueue.enqueue(new TSOS.Interrupt(PRINT_NUMBER_IRQ, num));
+        };
+        Kernel.prototype.terminateProcessFromBase = function (base) {
+            var PID = _Scheduler.findPID(base);
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(TERMINATE_PROCESS_IRQ, PID));
         };
         //
         // OS Utility Routines

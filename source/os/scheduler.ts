@@ -9,10 +9,68 @@ module TSOS
 {
     export class scheduler
     {
-           constructor(public processRunning: TSOS.PCB = null, public nextPID: number = 0)
+           constructor(public processRunning: TSOS.PCB = null, public nextPID: number = 0, public readyQueue: Queue = new Queue(),
+                       public residentQueue: Queue = new Queue(), public terminatedQ: Queue = new Queue())
            {
 
            }
+
+        public removeFromResQueue(PID: number) : TSOS.PCB
+        {
+            var tempQ: Queue = new Queue();
+            var PCB: TSOS.PCB;
+            var retPCB: TSOS.PCB = null;
+
+            while(this.residentQueue.getSize() > 0)
+            {
+                PCB = this.residentQueue.dequeue();
+
+                if(PID == PCB.PID)
+                {
+                    retPCB = PCB;
+                }
+                else
+                {
+                    tempQ.enqueue(PCB);
+                }
+            }
+
+            while(tempQ.getSize() > 0)
+            {
+                this.residentQueue.enqueue(tempQ.dequeue());
+            }
+
+            return retPCB;
+        }
+
+        public removeFromReadyQueue(PID: number) : TSOS.PCB
+        {
+            var tempQ: Queue = new Queue();
+            var PCB: TSOS.PCB;
+            var retPCB: TSOS.PCB = null;
+
+            while(this.readyQueue.getSize() > 0)
+            {
+                PCB = this.readyQueue.dequeue();
+
+                if(PID == PCB.PID)
+                {
+                    retPCB = PCB;
+                }
+                else
+                {
+                    tempQ.enqueue(PCB);
+                }
+            }
+
+            while(tempQ.getSize() > 0)
+            {
+                this.readyQueue.enqueue(tempQ.dequeue());
+            }
+
+            return retPCB;
+        }
+
 
            public createProcess(progInput: string) : TSOS.PCB
            {
@@ -24,6 +82,8 @@ module TSOS
                // Return false if program already loaded
                if( PcB == null )
                     return null;
+
+               this.residentQueue.enqueue(PcB);
 
                // Send trace message
                _Kernel.krnTrace("Created process with PID " + this.nextPID + ".");
@@ -37,21 +97,31 @@ module TSOS
 
         public executeProcess(pid : number) : boolean
         {
-            // Check if a process is not loaded
-            if(_MemoryManager.loadedPCB == null)
-                // Return false
+           if(this.residentQueue.getSize() == 0)
                 return false;
 
-            // Check if loaded process pid = pid passed in
-            if(_MemoryManager.loadedPCB.PID != pid)
-                //If not return false
+            _Kernel.krnTrace("this 1");
+
+            var PCB: TSOS.PCB = this.removeFromResQueue(pid);
+
+            _Kernel.krnTrace("this 2");
+
+            if(PCB == null)
                 return false;
 
-            // Set runningProcess to loadedProcess's pcb
-            this.processRunning = _MemoryManager.loadedPCB;
+            this.readyQueue.enqueue(PCB);
+
+            _Kernel.krnTrace("this 3");
+
+
+            if(this.processRunning == null)
+                this.contextSwitch();
+
+            _Kernel.krnTrace("this 4");
+
 
             // Copy all register values from pcb to cpu registers
-            _CPU.Xreg = this.processRunning.xReg;
+        /*    _CPU.Xreg = this.processRunning.xReg;
             _CPU.Yreg = this.processRunning.yReg;
             _CPU.Acc = this.processRunning.accumulator;
             _CPU.PC = this.processRunning.PC;
@@ -59,10 +129,9 @@ module TSOS
             _CPU.base = this.processRunning.base;
             _CPU.limit = this.processRunning.limit;
             // Set loaded process to null
-            _MemoryManager.loadedPCB = null;
 
             // Set cpu.isExecuting to true
-            _CPU.isExecuting = true;
+            _CPU.isExecuting = true; */
 
             // Trace executed process by pid
             _Kernel.krnTrace("Executed process with PID " + this.nextPID + ".");
@@ -70,43 +139,151 @@ module TSOS
             return true;
         }
 
-        public terminateProcess(/*pid : number*/): TSOS.PCB
+        public terminateProcess(pid : number): TSOS.PCB
         {
-            // Check if process running
-            if(this.processRunning == null)
-                // If not return -1
-                return null;
+            var PCB: TSOS.PCB = null;
 
-            /*
-            // Check if pid matches running pid
-            if(pid == this.processRunning.PID)
-                        // If not retunr -2
-                return false;
-                */
+            if(this.processRunning.PID == pid)
+            {
+                PCB = this.processRunning;
+                this.terminatedQ.enqueue(PCB);
+                this.processRunning = null;
+                this.contextSwitch();
+            }
+            else
+            {
+                PCB = this.removeFromReadyQueue(pid);
 
-            // Set is cpu.isexecuting to false
-            _CPU.isExecuting = false;
+                if(PCB != null)
+                {
+                    this.terminatedQ.enqueue(PCB);
+                }
+            }
 
-            // Copy register values to pcb
-            this.processRunning.xReg = _CPU.Xreg;
-            this.processRunning.yReg =  _CPU.Yreg;
-            this.processRunning.accumulator = _CPU.Acc;
-            this.processRunning.PC = _CPU.PC;
-            this.processRunning.zFlag = _CPU.Zflag;
-            this.processRunning.base = _CPU.base;
-            this.processRunning.limit = _CPU.limit;
+            if(PCB != null)
+            {
+                _MemoryManager.unmarkPartition(PCB.base);
 
-            // Trace terminated process by pid
-            _Kernel.krnTrace("Terminating process with PID " + this.nextPID + ".");
-            // Trace pcb values
-            _Kernel.krnTrace(this.processRunning.toString());
-
-            var pcb : TSOS.PCB = this.processRunning;
-
-            // Set runningProcess to null
-            this.processRunning = null;
+                // Trace terminated process by pid
+                _Kernel.krnTrace("Terminating process with PID " + PCB.PID + ".");
+                // Trace pcb values
+                _Kernel.krnTrace(PCB.toString());
+            }
             // return 1
-            return pcb;
+            return PCB;
+        }
+
+        public contextSwitch()
+        {
+            _Kernel.krnTrace("Performing context switch.");
+
+            if(this.processRunning != null)
+            {
+                _Kernel.krnTrace("that 1-1");
+
+                if(this.readyQueue.getSize() > 0)
+                {
+                    _Kernel.krnTrace("that 1-2");
+
+                    this.processRunning.xReg = _CPU.Xreg;
+                    this.processRunning.yReg =  _CPU.Yreg;
+                    this.processRunning.accumulator = _CPU.Acc;
+                    this.processRunning.PC = _CPU.PC;
+                    this.processRunning.zFlag = _CPU.Zflag;
+                    this.processRunning.base = _CPU.base;
+                    this.processRunning.limit = _CPU.limit;
+
+                    _Kernel.krnTrace("that 1-3");
+
+                    this.readyQueue.enqueue(this.processRunning);
+
+                    _Kernel.krnTrace("that 1-4");
+
+                    this.processRunning = this.readyQueue.dequeue();
+
+                    _Kernel.krnTrace("that 1-5");
+
+
+                    _CPU.Xreg = this.processRunning.xReg;
+                    _CPU.Yreg = this.processRunning.yReg;
+                    _CPU.Acc = this.processRunning.accumulator;
+                    _CPU.PC = this.processRunning.PC;
+                    _CPU.Zflag = this.processRunning.zFlag;
+                    _CPU.base = this.processRunning.base;
+                    _CPU.limit = this.processRunning.limit;
+
+                    _timerOn = true;
+                    _CPU.isExecuting = true;
+                }
+            }
+            else
+            {
+                _Kernel.krnTrace("that 2-1");
+
+                if(this.readyQueue.getSize() > 0)
+                {
+                    _Kernel.krnTrace("that 2-2");
+
+                    this.processRunning = this.readyQueue.dequeue();
+
+                    _Kernel.krnTrace("that 2-3");
+
+                    _CPU.Xreg = this.processRunning.xReg;
+                    _CPU.Yreg = this.processRunning.yReg;
+                    _CPU.Acc = this.processRunning.accumulator;
+                    _CPU.PC = this.processRunning.PC;
+                    _CPU.Zflag = this.processRunning.zFlag;
+                    _CPU.base = this.processRunning.base;
+                    _CPU.limit = this.processRunning.limit;
+
+                    _timerOn = true;
+                    _CPU.isExecuting = true;
+                }
+                else
+                {
+                    _Kernel.krnTrace("this 2-2-1");
+
+                    _timerOn = false;
+                    _timerCount = 0;
+                    _CPU.isExecuting = false;
+                }
+            }
+        }
+
+        public findPID(baseAddr: number) : number
+        {
+            var PID = -1;
+            var tempQ = new Queue();
+            var PCB = null;
+
+            if(this.processRunning != null)
+            {
+
+                if(this.processRunning.base == baseAddr)
+                {
+                PID = this.processRunning.PID;
+                }
+
+            }
+            if(PID == -1)
+            {
+                while(this.readyQueue.getSize() > 0)
+                {
+                    PCB = this.readyQueue.dequeue();
+                        if(PCB.base == baseAddr)
+                        {
+                            PID = PCB.PID;
+                        }
+                    tempQ.enqueue(PCB);
+                }
+
+                while(tempQ.getSize() > 0)
+                {
+                    this.readyQueue.enqueue(tempQ.dequeue());
+                }
+            }
+
+            return PID;
         }
     }
 }

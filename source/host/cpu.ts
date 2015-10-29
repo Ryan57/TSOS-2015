@@ -337,7 +337,7 @@ module TSOS {
                     break;
 
                 case '0':
-                    _KernelInterruptQueue.enqueue(new Interrupt(TERMINATE_PROCESS_IRQ,null));
+                    _Kernel.terminateProcessFromBase(this.base);
                     this.isExecuting = false;
                     break;
 
@@ -345,28 +345,31 @@ module TSOS {
                     this.invalidOpCode(inst);
                     break;
             }
+            _KernelInterruptQueue.enqueue(new Interrupt(TIMER_IRQ, null));
+
 
             TSOS.Control.updateMemTable();
             TSOS.Control.updateCPUTable();
         }
 
         public memAccessViolation(address: number): void {
-            _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ,address));
+            _KernelInterruptQueue.enqueue(new Interrupt(MEMORY_ACCESS_VIOLATION_IRQ,[address, this.base]));
             this.isExecuting = false;
         }
 
+
         public overFlow(address: number): void {
-            _KernelInterruptQueue.enqueue(new Interrupt(OVERFLOW_IRQ,address));
+            _KernelInterruptQueue.enqueue(new Interrupt(OVERFLOW_IRQ,[address, this.base]));
             this.isExecuting = false;
         }
 
         public invalidOpCode(opCode: string): void {
-            _KernelInterruptQueue.enqueue(new Interrupt(INVALID_OP_CODE_IRQ,opCode));
+            _KernelInterruptQueue.enqueue(new Interrupt(INVALID_OP_CODE_IRQ,[opCode, this.base]));
             this.isExecuting = false;
         }
 
         public abnormalTermination(): void {
-            _KernelInterruptQueue.enqueue(new Interrupt(UNEXPECTED_TERMINATION_IRQ,null));
+            _KernelInterruptQueue.enqueue(new Interrupt(UNEXPECTED_TERMINATION_IRQ, this.base));
             this.isExecuting = false;
         }
 

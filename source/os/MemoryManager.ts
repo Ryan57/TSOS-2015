@@ -46,39 +46,107 @@ module TSOS {
 
 
 
-        constructor(public loadedPCB: TSOS.PCB = null)
+        constructor(public loadedPartitions: Array<boolean> = new Array<boolean>(),
+                    public partitionBaseAddress: Array<number> = new Array<number>())
         {
+            var baseAddress = 0;
 
+            this.loadedPartitions[0] = false;
+            this.loadedPartitions[1] = false;
+            this.loadedPartitions[2] = false;
+
+            for(var i = 0; i < 3; i++)
+            {
+                this.partitionBaseAddress[i] = baseAddress;
+                baseAddress += 256;
+            }
         }
 
      public loadProgram(prog : string, pid : number) : TSOS.PCB {
 
-         if (this.loadedPCB != null)
-             return null;
+         var found = false;
+         var partition = 0;
+
+         for(var i = 0; (i < this.loadedPartitions.length) && !found; i++)
+         {
+             if(this.loadedPartitions[i] == false)
+             {
+                 partition = i;
+                 found = true;
+             }
+         }
+         _Kernel.krnTrace("partition " + partition.toString());
+
+            if(!found)
+                return null;
+
+        // if (this.loadedPCB != null)
+          //   return null;
 
          var bytes = prog.split(' ');
          var value:number = 0;
 
-         _Memory.clrMem();
+         _Kernel.krnTrace("there 1");
 
-         for (var i = 0; (i < bytes.length) && (i < _MemPartitionSize ); i++) {
-             value = parseInt(bytes[i], 16)
+        this.clrPartition(partition);
+
+         var base = this.partitionBaseAddress[partition];
+         var limit = base + _MemPartitionSize;
+
+         var byteIndex = 0;
+         _Kernel.krnTrace("len" + bytes.length.toString());
+
+         for (var i = base; (byteIndex < bytes.length) && (i < limit ); i++) {
+             value = parseInt(bytes[byteIndex], 16);
              _Memory.setMem(value, i);
-             _Kernel.krnTrace(value.toString());
+             byteIndex++;
+
+             _Kernel.krnTrace("index, value " + i.toString() + "," + value.toString(16));
+
          }
 
 
          var PcB:TSOS.PCB = new TSOS.PCB(pid);
-         PcB.base = 0;
+         PcB.base = this.partitionBaseAddress[partition];
          PcB.limit = _MemPartitionSize;
-         this.loadedPCB = PcB;
+         this.loadedPartitions[partition] = true;
+
 
          TSOS.Control.updateMemTable();
 
          return PcB;
      }
 
-        public getString(address : number,limit : number) : string
+     public clrPartition(iPartition: number)
+        {
+            if(iPartition < 0 || iPartition > 2)
+                return;
+
+            var base = this.partitionBaseAddress[iPartition];
+            var limit = base + _MemPartitionSize;
+
+            for (var i = base; i < limit; i++) {
+                _Memory.setMem(0, i);
+                _Kernel.krnTrace("CLR index " + i.toString());
+            }
+        }
+
+     public unmarkPartition(baseAddr: number)
+        {
+            var partition = -1;
+
+            for(var i = 0; (i < this.partitionBaseAddress.length) && (partition == -1); i++)
+            {
+                if(this.partitionBaseAddress[i] == baseAddr)
+                    partition = i;
+            }
+                if(partition == -1)
+                return;
+
+            this.loadedPartitions[partition] = false;
+        }
+
+     public getString(address : number,limit : number) : string
         {
             var str : string = "";
             var val : number = 0;

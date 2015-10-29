@@ -25,16 +25,20 @@ var INVALID_OP_CODE_IRQ = 7;
 var UNEXPECTED_TERMINATION_IRQ = 8;
 var PRINT_TEXT_IRQ = 9;
 var PRINT_NUMBER_IRQ = 10;
+var CONTEXT_SWITCH_IRQ = 11;
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
 //
 var _Memory;
 var _MemoryManager;
-var _MemMax = 256;
+var _MemMax = 768;
 var _MemPartitionSize = 256;
 var _Scheduler;
 var _pcb;
+var _timerOn = false;
+var _timerCount = 0;
+var _quantum = 6;
 //var _Control: TSOS.Control;
 var _CPU; // Utilize TypeScript's type annotation system to ensure that _CPU is an instance of the Cpu class.
 var _OSclock = 0; // Page 23.

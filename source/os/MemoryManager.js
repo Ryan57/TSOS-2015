@@ -4,9 +4,11 @@
 var TSOS;
 (function (TSOS) {
     var MemoryManager = (function () {
-        function MemoryManager(loadedPCB) {
-            if (loadedPCB === void 0) { loadedPCB = null; }
-            this.loadedPCB = loadedPCB;
+        function MemoryManager(loadedPartitions, partitionBaseAddress) {
+            if (loadedPartitions === void 0) { loadedPartitions = new Array(); }
+            if (partitionBaseAddress === void 0) { partitionBaseAddress = new Array(); }
+            this.loadedPartitions = loadedPartitions;
+            this.partitionBaseAddress = partitionBaseAddress;
             this.ascii = { 32: ' ',
                 48: '0',
                 49: '1',
@@ -44,24 +46,69 @@ var TSOS;
                 120: 'x',
                 121: 'y',
                 122: 'z' };
+            var baseAddress = 0;
+            this.loadedPartitions[0] = false;
+            this.loadedPartitions[1] = false;
+            this.loadedPartitions[2] = false;
+            for (var i = 0; i < 3; i++) {
+                this.partitionBaseAddress[i] = baseAddress;
+                baseAddress += 256;
+            }
         }
         MemoryManager.prototype.loadProgram = function (prog, pid) {
-            if (this.loadedPCB != null)
+            var found = false;
+            var partition = 0;
+            for (var i = 0; (i < this.loadedPartitions.length) && !found; i++) {
+                if (this.loadedPartitions[i] == false) {
+                    partition = i;
+                    found = true;
+                }
+            }
+            _Kernel.krnTrace("partition " + partition.toString());
+            if (!found)
                 return null;
+            // if (this.loadedPCB != null)
+            //   return null;
             var bytes = prog.split(' ');
             var value = 0;
-            _Memory.clrMem();
-            for (var i = 0; (i < bytes.length) && (i < _MemPartitionSize); i++) {
-                value = parseInt(bytes[i], 16);
+            _Kernel.krnTrace("there 1");
+            this.clrPartition(partition);
+            var base = this.partitionBaseAddress[partition];
+            var limit = base + _MemPartitionSize;
+            var byteIndex = 0;
+            _Kernel.krnTrace("len" + bytes.length.toString());
+            for (var i = base; (byteIndex < bytes.length) && (i < limit); i++) {
+                value = parseInt(bytes[byteIndex], 16);
                 _Memory.setMem(value, i);
-                _Kernel.krnTrace(value.toString());
+                byteIndex++;
+                _Kernel.krnTrace("index, value " + i.toString() + "," + value.toString(16));
             }
             var PcB = new TSOS.PCB(pid);
-            PcB.base = 0;
+            PcB.base = this.partitionBaseAddress[partition];
             PcB.limit = _MemPartitionSize;
-            this.loadedPCB = PcB;
+            this.loadedPartitions[partition] = true;
             TSOS.Control.updateMemTable();
             return PcB;
+        };
+        MemoryManager.prototype.clrPartition = function (iPartition) {
+            if (iPartition < 0 || iPartition > 2)
+                return;
+            var base = this.partitionBaseAddress[iPartition];
+            var limit = base + _MemPartitionSize;
+            for (var i = base; i < limit; i++) {
+                _Memory.setMem(0, i);
+                _Kernel.krnTrace("CLR index " + i.toString());
+            }
+        };
+        MemoryManager.prototype.unmarkPartition = function (baseAddr) {
+            var partition = -1;
+            for (var i = 0; (i < this.partitionBaseAddress.length) && (partition == -1); i++) {
+                if (this.partitionBaseAddress[i] == baseAddr)
+                    partition = i;
+            }
+            if (partition == -1)
+                return;
+            this.loadedPartitions[partition] = false;
         };
         MemoryManager.prototype.getString = function (address, limit) {
             var str = "";
