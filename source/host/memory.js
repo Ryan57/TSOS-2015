@@ -5,8 +5,8 @@ var TSOS;
 (function (TSOS) {
     var memory = (function () {
         function memory(mem, length) {
-            if (mem === void 0) { mem = new Array(256); }
-            if (length === void 0) { length = 256; }
+            if (mem === void 0) { mem = new Array(768); }
+            if (length === void 0) { length = 768; }
             this.mem = mem;
             this.length = length;
             this.clrMem();

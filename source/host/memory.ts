@@ -6,7 +6,7 @@ module TSOS {
 
     export class memory {
 
-        constructor(private mem = new Array(256), public length: number = 256) {
+        constructor(private mem = new Array(768), public length: number = 768) {
 
             this.clrMem();
         }
