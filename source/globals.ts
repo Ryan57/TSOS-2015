@@ -38,18 +38,24 @@ const PRINT_TEXT_IRQ: number = 9;
 
 const PRINT_NUMBER_IRQ: number = 10;
 
+const CONTEXT_SWITCH_IRQ: number = 11;
+
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
 //
 var _Memory: TSOS.memory;
 var _MemoryManager: TSOS.MemoryManager;
-var _MemMax: number = 256;
+var _MemMax: number = 768;
 var _MemPartitionSize = 256;
 
 var _Scheduler: TSOS.scheduler;
 
 var _pcb: TSOS.PCB;
+
+var _timerOn: boolean = false;
+var _timerCount: number = 0;
+var _quantum: number = 6;
 
 //var _Control: TSOS.Control;
 
