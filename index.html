@@ -85,7 +85,8 @@
         </label>
     </div>
 
-    <div id="divLog" style="margin:7px; float:left;">
+   <div id="left alligned items" style="float:left; margin-left: 4px">
+    <div id="divLog">
         <label>
             Host Log
             <br>
@@ -95,9 +96,22 @@
                    cols="48"
                  ></textarea>
         </label>
-    </div>
+     </div>
+       <div id="divUserProgramInput">
+           <label>
+               User Program Input
+               <br>
+         <textarea name="taProgramInput"
+                   id  ="taProgramInput"
+                   rows="8"
+                   cols="48"
+                 ></textarea>
+           </label>
+       </div>
+   </div>
 
-    <div id="divMemTable" style="margin:7px; height:200px; width:277px; float:left; background-color:white; overflow:auto;">
+   <div id="right alligned items" style="float:left; margin-left: 4px; width: 300px;">
+    <div id="divMemTable" style="margin:7px; height:200px; width:277px; background-color:white; overflow:auto;">
         <label>
             Memory
         </label>
@@ -105,25 +119,26 @@
         <table id="MemTable" background-color="white" border="2">
         </table>
     </div>
-    <div id="divCPUReg" style="margin:7px; float:left;">
+    <div id="divCPUReg" style="margin:7px">
         <label>
             CPU Registers
         </label>
         <br>
-        <table id="CPU" border="2" height="117" width="150">
+        <table id="CPU" border="2" height="117">
         </table>
     </div>
-    <div id="divUserProgramInput" style="margin:7px; float:left;">
-        <label>
-            User Program Input
-            <br>
-         <textarea name="taProgramInput"
-                   id  ="taProgramInput"
-                   rows="8"
-                   cols="48"
-                 ></textarea>
-        </label>
-    </div>
+       <div id="divRunningProcess" style="margin:7px;">
+           <label>Running Process</label>
+           <table id="RunningProcess" border="2">
+           </table>
+       </div>
+       <div id="divReadyQueue" style="margin:7px;">
+           <label>Ready Queue</label>
+           <table id="ReadyQueue" border="2">
+           </table>
+       </div>
+   </div>
+
 </div>
 
 <p class="footerText" style="clear:both;">

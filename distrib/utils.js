@@ -50,6 +50,15 @@ var TSOS;
                 newstr = '0' + newstr;
             return newstr;
         };
+        Utils.formatTimeString = function (date) {
+            var hour = date.getHours();
+            var minute = date.getMinutes();
+            var seconds = date.getSeconds();
+            if (hour > 12) {
+                hour = hour - 12;
+            }
+            return hour.toString() + ":" + minute.toString() + ":" + seconds.toString();
+        };
         return Utils;
     })();
     TSOS.Utils = Utils;

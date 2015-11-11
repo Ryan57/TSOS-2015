@@ -71,7 +71,6 @@ module TSOS
             return retPCB;
         }
 
-
            public createProcess(progInput: string) : TSOS.PCB
            {
 
@@ -100,24 +99,17 @@ module TSOS
            if(this.residentQueue.getSize() == 0)
                 return false;
 
-            _Kernel.krnTrace("this 1");
-
             var PCB: TSOS.PCB = this.removeFromResQueue(pid);
-
-            _Kernel.krnTrace("this 2");
 
             if(PCB == null)
                 return false;
 
             this.readyQueue.enqueue(PCB);
-
-            _Kernel.krnTrace("this 3");
+            TSOS.Control.updateReadyQueueTable();
 
 
             if(this.processRunning == null)
                 this.contextSwitch();
-
-            _Kernel.krnTrace("this 4");
 
 
             // Copy all register values from pcb to cpu registers
@@ -137,6 +129,34 @@ module TSOS
             _Kernel.krnTrace("Executed process with PID " + this.nextPID + ".");
             // Return true
             return true;
+    }
+
+    // Shell comman runall engues interrupt new interrupt EXECUTE_ALL_PROCESS_IRQ
+    // with null as param. Kernel handles this interrupt by calling this function,
+    // which returns how many process it executed, and messages back to user
+    // that it executed X processes
+
+        public executeAll() : number
+        {
+            // Create a pcb var
+            var PCB: TSOS.PCB = this.removeFromResQueue(this.residentQueue.getSize());
+
+            // Create running process counter
+            var processRunningCounter;
+
+            // Cycle through resident queue while(this.residentQueue.getSize() > 0 )
+            while(this.residentQueue.getSize() > 0)
+            {
+                PCB = this.residentQueue.dequeue();   // Dequeue pcb from resident queue at set to pcb variable
+                this.readyQueue.enqueue(PCB);             // Enqueu pcb variable into ready queue
+                processRunningCounter++;                  // Increment running process counter
+            }
+
+            if(this.processRunning == null)
+                this.contextSwitch();                         // Call context switch
+
+            _Kernel.krnTrace("Executed process with PID " + this.nextPID + ".");    // Trace executed process by pid
+            return processRunningCounter;                                           // Return running process counter
         }
 
         public terminateProcess(pid : number): TSOS.PCB
@@ -153,6 +173,8 @@ module TSOS
             else
             {
                 PCB = this.removeFromReadyQueue(pid);
+                TSOS.Control.updateReadyQueueTable();
+
 
                 if(PCB != null)
                 {
@@ -179,11 +201,9 @@ module TSOS
 
             if(this.processRunning != null)
             {
-                _Kernel.krnTrace("that 1-1");
 
                 if(this.readyQueue.getSize() > 0)
                 {
-                    _Kernel.krnTrace("that 1-2");
 
                     this.processRunning.xReg = _CPU.Xreg;
                     this.processRunning.yReg =  _CPU.Yreg;
@@ -193,15 +213,11 @@ module TSOS
                     this.processRunning.base = _CPU.base;
                     this.processRunning.limit = _CPU.limit;
 
-                    _Kernel.krnTrace("that 1-3");
 
                     this.readyQueue.enqueue(this.processRunning);
 
-                    _Kernel.krnTrace("that 1-4");
 
                     this.processRunning = this.readyQueue.dequeue();
-
-                    _Kernel.krnTrace("that 1-5");
 
 
                     _CPU.Xreg = this.processRunning.xReg;
@@ -248,6 +264,9 @@ module TSOS
                     _CPU.isExecuting = false;
                 }
             }
+            TSOS.Control.updateRunProcessTable();
+            TSOS.Control.updateReadyQueueTable();
+
         }
 
         public findPID(baseAddr: number) : number

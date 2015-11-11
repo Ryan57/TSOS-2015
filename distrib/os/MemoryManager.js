@@ -55,6 +55,14 @@ var TSOS;
                 baseAddress += 256;
             }
         }
+        MemoryManager.prototype.availablePartitions = function () {
+            var availPartitions = 0;
+            for (var i = 0; i < 3; i++) {
+                if (this.loadedPartitions[i] == false)
+                    availPartitions++;
+            }
+            return availPartitions;
+        };
         MemoryManager.prototype.loadProgram = function (prog, pid) {
             var found = false;
             var partition = 0;
@@ -71,7 +79,6 @@ var TSOS;
             //   return null;
             var bytes = prog.split(' ');
             var value = 0;
-            _Kernel.krnTrace("there 1");
             this.clrPartition(partition);
             var base = this.partitionBaseAddress[partition];
             var limit = base + _MemPartitionSize;
@@ -99,6 +106,13 @@ var TSOS;
                 _Memory.setMem(0, i);
                 _Kernel.krnTrace("CLR index " + i.toString());
             }
+            this.loadedPartitions[iPartition] = false;
+        };
+        MemoryManager.prototype.clrAllPartitions = function () {
+            for (var i = 0; i < 3; i++) {
+                this.clrPartition(i);
+            }
+            TSOS.Control.updateMemTable();
         };
         MemoryManager.prototype.unmarkPartition = function (baseAddr) {
             var partition = -1;

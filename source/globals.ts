@@ -40,6 +40,15 @@ const PRINT_NUMBER_IRQ: number = 10;
 
 const CONTEXT_SWITCH_IRQ: number = 11;
 
+const EXECUTE_ALL_PROCESSES_IRQ: number = 12;
+
+const CREATE_ALL_PROCESSES_IRQ: number = 13;
+
+const QUANTUM_CHANGE_IRQ: number = 14;
+
+const CLEAR_PARTITION_IRQ: number = 15;
+
+
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.

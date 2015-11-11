@@ -9,9 +9,9 @@ var TSOS;
         function scheduler(processRunning, nextPID, readyQueue, residentQueue, terminatedQ) {
             if (processRunning === void 0) { processRunning = null; }
             if (nextPID === void 0) { nextPID = 0; }
-            if (readyQueue === void 0) { readyQueue = new TSOS.Queue(); }
-            if (residentQueue === void 0) { residentQueue = new TSOS.Queue(); }
-            if (terminatedQ === void 0) { terminatedQ = new TSOS.Queue(); }
+            if (readyQueue === void 0) { readyQueue = new Queue(); }
+            if (residentQueue === void 0) { residentQueue = new Queue(); }
+            if (terminatedQ === void 0) { terminatedQ = new Queue(); }
             this.processRunning = processRunning;
             this.nextPID = nextPID;
             this.readyQueue = readyQueue;
@@ -19,7 +19,7 @@ var TSOS;
             this.terminatedQ = terminatedQ;
         }
         scheduler.prototype.removeFromResQueue = function (PID) {
-            var tempQ = new TSOS.Queue();
+            var tempQ = new Queue();
             var PCB;
             var retPCB = null;
             while (this.residentQueue.getSize() > 0) {
@@ -37,7 +37,7 @@ var TSOS;
             return retPCB;
         };
         scheduler.prototype.removeFromReadyQueue = function (PID) {
-            var tempQ = new TSOS.Queue();
+            var tempQ = new Queue();
             var PCB;
             var retPCB = null;
             while (this.readyQueue.getSize() > 0) {
@@ -72,16 +72,13 @@ var TSOS;
         scheduler.prototype.executeProcess = function (pid) {
             if (this.residentQueue.getSize() == 0)
                 return false;
-            _Kernel.krnTrace("this 1");
             var PCB = this.removeFromResQueue(pid);
-            _Kernel.krnTrace("this 2");
             if (PCB == null)
                 return false;
             this.readyQueue.enqueue(PCB);
-            _Kernel.krnTrace("this 3");
+            TSOS.Control.updateReadyQueueTable();
             if (this.processRunning == null)
                 this.contextSwitch();
-            _Kernel.krnTrace("this 4");
             // Copy all register values from pcb to cpu registers
             /*    _CPU.Xreg = this.processRunning.xReg;
                 _CPU.Yreg = this.processRunning.yReg;
@@ -99,6 +96,26 @@ var TSOS;
             // Return true
             return true;
         };
+        // Shell comman runall engues interrupt new interrupt EXECUTE_ALL_PROCESS_IRQ
+        // with null as param. Kernel handles this interrupt by calling this function,
+        // which returns how many process it executed, and messages back to user
+        // that it executed X processes
+        scheduler.prototype.executeAll = function () {
+            // Create a pcb var
+            var PCB = this.removeFromResQueue(this.residentQueue.getSize());
+            // Create running process counter
+            var processRunningCounter;
+            // Cycle through resident queue while(this.residentQueue.getSize() > 0 )
+            while (this.residentQueue.getSize() > 0) {
+                PCB = this.residentQueue.dequeue(); // Dequeue pcb from resident queue at set to pcb variable
+                this.readyQueue.enqueue(PCB); // Enqueu pcb variable into ready queue
+                processRunningCounter++; // Increment running process counter
+            }
+            if (this.processRunning == null)
+                this.contextSwitch(); // Call context switch
+            _Kernel.krnTrace("Executed process with PID " + this.nextPID + "."); // Trace executed process by pid
+            return processRunningCounter; // Return running process counter
+        };
         scheduler.prototype.terminateProcess = function (pid) {
             var PCB = null;
             if (this.processRunning.PID == pid) {
@@ -109,6 +126,7 @@ var TSOS;
             }
             else {
                 PCB = this.removeFromReadyQueue(pid);
+                TSOS.Control.updateReadyQueueTable();
                 if (PCB != null) {
                     this.terminatedQ.enqueue(PCB);
                 }
@@ -126,9 +144,7 @@ var TSOS;
         scheduler.prototype.contextSwitch = function () {
             _Kernel.krnTrace("Performing context switch.");
             if (this.processRunning != null) {
-                _Kernel.krnTrace("that 1-1");
                 if (this.readyQueue.getSize() > 0) {
-                    _Kernel.krnTrace("that 1-2");
                     this.processRunning.xReg = _CPU.Xreg;
                     this.processRunning.yReg = _CPU.Yreg;
                     this.processRunning.accumulator = _CPU.Acc;
@@ -136,11 +152,8 @@ var TSOS;
                     this.processRunning.zFlag = _CPU.Zflag;
                     this.processRunning.base = _CPU.base;
                     this.processRunning.limit = _CPU.limit;
-                    _Kernel.krnTrace("that 1-3");
                     this.readyQueue.enqueue(this.processRunning);
-                    _Kernel.krnTrace("that 1-4");
                     this.processRunning = this.readyQueue.dequeue();
-                    _Kernel.krnTrace("that 1-5");
                     _CPU.Xreg = this.processRunning.xReg;
                     _CPU.Yreg = this.processRunning.yReg;
                     _CPU.Acc = this.processRunning.accumulator;
@@ -175,10 +188,12 @@ var TSOS;
                     _CPU.isExecuting = false;
                 }
             }
+            TSOS.Control.updateRunProcessTable();
+            TSOS.Control.updateReadyQueueTable();
         };
         scheduler.prototype.findPID = function (baseAddr) {
             var PID = -1;
-            var tempQ = new TSOS.Queue();
+            var tempQ = new Queue();
             var PCB = null;
             if (this.processRunning != null) {
                 if (this.processRunning.base == baseAddr) {

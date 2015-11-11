@@ -141,11 +141,7 @@ module TSOS {
                      break;
 
                 case EXECUTE_PROCESS_IRQ:
-                    this.krnTrace("here 1");
-
                     var retVal : boolean = _Scheduler.executeProcess(params);
-
-                    this.krnTrace("here 2");
 
                     if(retVal == false)
                         _OsShell.outPutMsg("No process loaded with PID: " + params.toString());
@@ -195,6 +191,45 @@ module TSOS {
                     _Scheduler.contextSwitch();
                     break;
 
+                case CREATE_ALL_PROCESSES_IRQ:
+                    var availablePartitions = _MemoryManager.availablePartitions();
+                    for(var i = 0; i < availablePartitions; i++)
+                    {
+                        _KernelInterruptQueue.enqueue(new Interrupt(CREATE_PROCESS_IRQ,params));
+                    }
+                    break;
+
+                case EXECUTE_ALL_PROCESSES_IRQ:
+                    var PID = null;
+                    for(var i = 0; i < _Scheduler.residentQueue.getSize(); i++)
+                    {
+                        PID = _Scheduler.residentQueue.q[i].PID;
+                        _KernelInterruptQueue.enqueue(new Interrupt(EXECUTE_PROCESS_IRQ,PID));
+                    }
+                    break;
+
+                case CLEAR_PARTITION_IRQ:
+                    if(_Scheduler.processRunning != null)
+                    {
+                        _OsShell.outPutMsg("Cannot clear memory while memory is in use.");
+                    }
+                    else {
+                        _MemoryManager.clrAllPartitions();
+                        _OsShell.outPutMsg("All memory has been cleared.");
+                    }
+                    break;
+
+                case QUANTUM_CHANGE_IRQ:
+                    if(params <= 0)
+                    {
+                        _OsShell.outPutMsg("Invalid quantum.");
+                    }
+                    else {
+                        _quantum = params;
+                        _OsShell.outPutMsg("Quantum changed to " + params.toString() + ".");
+                    }
+                    break;
+
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
             }
@@ -204,7 +239,7 @@ module TSOS {
             // Increase timer counter
             _timerCount++;
 
-            if(_timerCount == _quantum)
+            if(_timerCount >= _quantum)
             {
                 _KernelInterruptQueue.enqueue(new Interrupt(CONTEXT_SWITCH_IRQ, null));
                 _timerCount = 0;
@@ -241,6 +276,64 @@ module TSOS {
             var PID = _Scheduler.findPID(base);
             _KernelInterruptQueue.enqueue(new Interrupt(TERMINATE_PROCESS_IRQ,PID));
 
+        }
+
+        public terminateProcessFromPID(PID : number)
+        {
+            _KernelInterruptQueue.enqueue(new Interrupt(TERMINATE_PROCESS_IRQ,PID));
+        }
+
+        public loadAll(input : string): void
+        {
+            _KernelInterruptQueue.enqueue(new Interrupt(CREATE_ALL_PROCESSES_IRQ,input));
+        }
+
+        public runAll(): void
+        {
+            _KernelInterruptQueue.enqueue(new Interrupt(EXECUTE_ALL_PROCESSES_IRQ,null));
+        }
+
+        public quantumChange(quantum : number): void
+        {
+            _KernelInterruptQueue.enqueue(new Interrupt(QUANTUM_CHANGE_IRQ,quantum));
+        }
+
+        public clearMem(): void
+        {
+            _KernelInterruptQueue.enqueue(new Interrupt(CLEAR_PARTITION_IRQ,null));
+        }
+
+        public displayPS(): void
+        {
+            var message1 = "The running processes by PID are: ";
+            var message2 = "There are currently no running processes.";
+            var PSarray = [];
+
+            if(_Scheduler.processRunning != null)
+            {
+                PSarray.push(_Scheduler.processRunning.PID);
+
+                for(var i = 0; i < _Scheduler.readyQueue.getSize(); i++)
+                {
+                    PSarray.push(_Scheduler.readyQueue.q[i].PID);
+                }
+            }
+
+            if(PSarray.length > 0)
+            {
+                for(var i = 0; i < PSarray.length; i++)
+                {
+                    if(i != 0)
+                    message1 += ", ";
+
+                   message1 += PSarray[i].toString();
+                }
+                _StdOut.putText(message1);
+            }
+            else
+            {
+                _StdOut.putText(message2);
+            }
         }
         //
         // OS Utility Routines

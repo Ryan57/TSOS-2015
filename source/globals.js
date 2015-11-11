@@ -26,6 +26,10 @@ var UNEXPECTED_TERMINATION_IRQ = 8;
 var PRINT_TEXT_IRQ = 9;
 var PRINT_NUMBER_IRQ = 10;
 var CONTEXT_SWITCH_IRQ = 11;
+var EXECUTE_ALL_PROCESSES_IRQ = 12;
+var CREATE_ALL_PROCESSES_IRQ = 13;
+var QUANTUM_CHANGE_IRQ = 14;
+var CLEAR_PARTITION_IRQ = 15;
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.

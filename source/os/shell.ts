@@ -120,6 +120,36 @@ module TSOS {
                 "<number>- Runs a desired process command by <number>.");
             this.commandList[this.commandList.length] = sc;
 
+            sc = new ShellCommand(this.shellLoadAll,
+                "loadall",
+                "- Loads all process commands.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellRunAll,
+                "runall",
+                "- Runs all process commands.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellClrMem,
+                "clearmem",
+                "- Clears all memory partitions.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellKill,
+                "kill",
+                "<number>- Terminates a desired process command by <number>.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellQuantum,
+                "quantum",
+                "- Quantum sets the scheduling process to Round Robin.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellPS,
+                "ps",
+                "- Displays each pid for all active processes.");
+            this.commandList[this.commandList.length] = sc;
+
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
 
@@ -330,10 +360,28 @@ module TSOS {
                         _StdOut.putText("Displays the current date and time.");
                         break;
                     case "load":
-                        _StdOut.putText("Checks for valid Hex digits.");
+                        _StdOut.putText("Checks for valid Hex digits and loads them into a partition.");
                         break;
+                    case "loadAll":
+                        _StdOut.putText("Loads all valid Hex digits into available partitions")
                     case "run":
-                        _StdOut.putText("Run's a desired process by inputting run pid.")
+                        _StdOut.putText("Run's a desired process by inputting run pid.");
+                        break;
+                    case "runAll":
+                        _StdOut.putText("Run's all processes for all loaded pid values.");
+                        break;
+                    case "clearMem":
+                        _StdOut.putText("Clears all memory partitions.");
+                        break;
+                    case "kill":
+                        _StdOut.putText("Terminates a desired process by inputting kill pid.");
+                        break;
+                    case "quantum":
+                        _StdOut.putText("Quantum sets the scheduler to Round Robin.");
+                        break;
+                    case "ps":
+                        _StdOut.putText("Displays the pid for each active process.")
+                        break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -463,20 +511,97 @@ module TSOS {
                     // Send the create process interrupt
                     _KernelInterruptQueue.enqueue(new Interrupt(CREATE_PROCESS_IRQ,stdInput));
                 }
-
             }
-
-
         }
 
-        public shellRun(args) {
+        public shellLoadAll(args) {
+            var input:string = (<HTMLInputElement>document.getElementById("taProgramInput")).value;
+
+            if (input.trim().length == 0)
+                _StdOut.putText("No program input found");
+            else if (input.match("[^a-f|A-F|0-9| ]+"))
+                _StdOut.putText("Non hex digits entered");
+            else {
+                // Trim white space
+                var whiteSpaceRegEx:RegExp = new RegExp("[ ]+");
+                var bytes:string[] = input.split(whiteSpaceRegEx);
+                var rawInput:string = bytes.join('');
+
+                // Check if over 512 characters (256 bytes)
+                if (rawInput.length > 512)
+
+                // Tell user program input too long
+                    _StdOut.putText("Program input over 256 bytes.");
+
+                // Else
+                else {
+
+                    // Standardize input (two charactes , space, two characters ....)
+                    var byte:string;
+                    var stdInput:string = "";
+                    for (var i = 0; i < rawInput.length; i += 2) {
+                        byte = rawInput[i];
+                        if (i + 1 < rawInput.length)
+                            byte += rawInput[i + 1];
+                        else
+                            byte += "0";
+
+                        if (i > 0)
+                            stdInput += ' ';
+                        stdInput += byte;
+                    }
+
+                    // Send the create process interrupt
+                    _Kernel.loadAll(input);
+                }
+            }
+        }
+
+
+        public shellRun(args)
+        {
             if(args.length == 0)
             _StdOut.putText("Usage - run <pid>");
 
-            else {
+            else
+            {
                 _KernelInterruptQueue.enqueue(new Interrupt(EXECUTE_PROCESS_IRQ, parseInt(args[0])));
 
             }
-    }
+        }
+
+        public shellRunAll(args)
+        {
+            _Kernel.runAll();
+        }
+
+        public shellClrMem(args)
+        {
+            _Kernel.clearMem();
+        }
+
+        public shellKill(args)
+        {
+            if(args.length > 0)
+                _Kernel.terminateProcessFromPID(args[0]);
+
+            else
+                _StdOut.putText("Usage - kill <int>");
+        }
+
+        public shellQuantum(args)
+        {
+            if(args.length > 0)
+                _Kernel.quantumChange(args[0]);
+
+            else
+                _StdOut.putText("Usage - quantum <int>");
+        }
+
+        public shellPS(args)
+        {
+            _Kernel.displayPS();
+        }
+
     }
 }

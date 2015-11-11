@@ -53,5 +53,19 @@ module TSOS {
 
             return newstr;
         }
+
+        public static formatTimeString(date:Date) : string
+        {
+            var hour = date.getHours();
+            var minute = date.getMinutes();
+            var seconds = date.getSeconds();
+
+            if(hour > 12)
+            {
+                hour = hour - 12;
+            }
+            return hour.toString() + ":" + minute.toString() + ":" + seconds.toString();
+
+        }
     }
 }

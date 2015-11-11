@@ -62,6 +62,19 @@ module TSOS {
             }
         }
 
+    public availablePartitions(): number
+    {
+        var availPartitions = 0;
+
+        for(var i = 0; i < 3; i++)
+        {
+         if(this.loadedPartitions[i] == false)
+             availPartitions++;
+        }
+
+        return availPartitions;
+    }
+
      public loadProgram(prog : string, pid : number) : TSOS.PCB {
 
          var found = false;
@@ -85,8 +98,6 @@ module TSOS {
 
          var bytes = prog.split(' ');
          var value:number = 0;
-
-         _Kernel.krnTrace("there 1");
 
         this.clrPartition(partition);
 
@@ -129,6 +140,16 @@ module TSOS {
                 _Memory.setMem(0, i);
                 _Kernel.krnTrace("CLR index " + i.toString());
             }
+            this.loadedPartitions[iPartition] = false;
+        }
+
+        public clrAllPartitions()
+        {
+            for(var i = 0; i < 3; i++)
+            {
+                this.clrPartition(i);
+            }
+            TSOS.Control.updateMemTable();
         }
 
      public unmarkPartition(baseAddr: number)

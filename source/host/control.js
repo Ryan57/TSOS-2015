@@ -86,6 +86,8 @@ var TSOS;
             this.hostCurStat("Started");
             this.createMemTable();
             this.createCPUTable();
+            this.createRunProcessTable();
+            this.createReadyQueueTable();
         };
         Control.hostBtnHaltOS_click = function (btn) {
             Control.hostLog("Emergency halt", "host");
@@ -178,6 +180,146 @@ var TSOS;
             row.insertCell().innerHTML = TSOS.Utils.padWithZeros(_CPU.Zflag.toString(16), 2);
             row.insertCell().innerHTML = TSOS.Utils.padWithZeros(_CPU.base.toString(16), 4);
             row.insertCell().innerHTML = TSOS.Utils.padWithZeros(_CPU.limit.toString(16), 4);
+        };
+        Control.createRunProcessTable = function () {
+            var tbl = document.getElementById("RunningProcess");
+            var hdr = tbl.insertRow();
+            var row = tbl.insertRow();
+            hdr.insertCell().innerHTML = '<b>' + 'PID' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'PC' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Acc' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'X Reg' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Y Reg' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Z Flag' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Base' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'TimeStamp' + '</b>';
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+        };
+        Control.updateRunProcessTable = function () {
+            // Inits
+            var tbl = document.getElementById("RunningProcess");
+            var row = tbl.rows.item(1);
+            var PID = "&nbsp";
+            var PC = "&nbsp";
+            var Acc = "&nbsp";
+            var Xreg = "&nbsp";
+            var Yreg = "&nbsp";
+            var Zflag = "&nbsp";
+            var base = "&nbsp";
+            var limit = "&nbsp";
+            var timeStamp = "&nbsp";
+            if (_Scheduler.processRunning != null) {
+                PID = TSOS.Utils.padWithZeros(_Scheduler.processRunning.PID.toString(16), 2);
+                PC = TSOS.Utils.padWithZeros(_Scheduler.processRunning.PC.toString(16), 2);
+                Acc = TSOS.Utils.padWithZeros(_Scheduler.processRunning.accumulator.toString(16), 2);
+                Xreg = TSOS.Utils.padWithZeros(_Scheduler.processRunning.xReg.toString(16), 2);
+                Yreg = TSOS.Utils.padWithZeros(_Scheduler.processRunning.yReg.toString(16), 2);
+                Zflag = TSOS.Utils.padWithZeros(_Scheduler.processRunning.zFlag.toString(16), 2);
+                base = TSOS.Utils.padWithZeros(_Scheduler.processRunning.base.toString(16), 4);
+                limit = TSOS.Utils.padWithZeros(_Scheduler.processRunning.limit.toString(16), 4);
+                timeStamp = TSOS.Utils.formatTimeString(_Scheduler.processRunning.timeStamp);
+            }
+            // Set register data
+            row.cells.item(0).innerHTML = PID;
+            row.cells.item(1).innerHTML = PC;
+            row.cells.item(2).innerHTML = Acc;
+            row.cells.item(3).innerHTML = Xreg;
+            row.cells.item(4).innerHTML = Yreg;
+            row.cells.item(5).innerHTML = Zflag;
+            row.cells.item(6).innerHTML = base;
+            row.cells.item(7).innerHTML = limit;
+            row.cells.item(8).innerHTML = timeStamp;
+        };
+        Control.createReadyQueueTable = function () {
+            var tbl = document.getElementById("ReadyQueue");
+            var hdr = tbl.insertRow();
+            var row = tbl.insertRow();
+            hdr.insertCell().innerHTML = '<b>' + 'PID' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'PC' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Acc' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'X Reg' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Y Reg' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Z Flag' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Base' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'TimeStamp' + '</b>';
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row = tbl.insertRow();
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row = tbl.insertRow();
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+        };
+        Control.updateReadyQueueTable = function () {
+            var tbl = document.getElementById("ReadyQueue");
+            var row = tbl.rows.item(1);
+            var PCB;
+            var insert = 0;
+            var rowIndex = 2;
+            for (var i = 0; i < _Scheduler.readyQueue.getSize(); i++) {
+                PCB = _Scheduler.readyQueue.q[i];
+                row.cells.item(0).innerHTML = TSOS.Utils.padWithZeros(PCB.PID.toString(16), 2);
+                row.cells.item(1).innerHTML = TSOS.Utils.padWithZeros(PCB.PC.toString(16), 2);
+                row.cells.item(2).innerHTML = TSOS.Utils.padWithZeros(PCB.accumulator.toString(16), 2);
+                row.cells.item(3).innerHTML = TSOS.Utils.padWithZeros(PCB.xReg.toString(16), 2);
+                row.cells.item(4).innerHTML = TSOS.Utils.padWithZeros(PCB.yReg.toString(16), 2);
+                row.cells.item(5).innerHTML = TSOS.Utils.padWithZeros(PCB.zFlag.toString(16), 2);
+                row.cells.item(6).innerHTML = TSOS.Utils.padWithZeros(PCB.base.toString(16), 4);
+                row.cells.item(7).innerHTML = TSOS.Utils.padWithZeros(PCB.limit.toString(16), 4);
+                row.cells.item(8).innerHTML = TSOS.Utils.formatTimeString(PCB.timeStamp);
+                if (i < 2) {
+                    row = tbl.rows.item(rowIndex);
+                    rowIndex++;
+                }
+                insert++;
+            }
+            for (var n = insert; n < 3; n++) {
+                row.cells.item(0).innerHTML = "&nbsp";
+                row.cells.item(1).innerHTML = "&nbsp";
+                row.cells.item(2).innerHTML = "&nbsp";
+                row.cells.item(3).innerHTML = "&nbsp";
+                row.cells.item(4).innerHTML = "&nbsp";
+                row.cells.item(5).innerHTML = "&nbsp";
+                row.cells.item(6).innerHTML = "&nbsp";
+                row.cells.item(7).innerHTML = "&nbsp";
+                row.cells.item(8).innerHTML = "&nbsp";
+                if (i < 2) {
+                    row = tbl.rows.item(rowIndex);
+                    rowIndex++;
+                }
+            }
         };
         return Control;
     })();
