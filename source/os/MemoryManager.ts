@@ -7,42 +7,42 @@ module TSOS {
     export class MemoryManager
     {
         public ascii = {32:  ' ',
-                        48:  '0',
-                        49:  '1',
-                        50:  '2',
-                        51:  '3',
-                        52:  '4',
-                        53:  '5',
-                        54:  '6',
-                        55:  '7',
-                        56:  '8',
-                        57:  '9',
-                        97:  'a',
-                        98:  'b',
-                        99:  'c',
-                        100: 'd',
-                        101: 'e',
-                        102: 'f',
-                        103: 'g',
-                        104: 'h',
-                        105: 'i',
-                        106: 'j',
-                        107: 'k',
-                        108: 'l',
-                        109: 'm',
-                        110: 'n',
-                        111: 'o',
-                        112: 'p',
-                        113: 'q',
-                        114: 'r',
-                        115: 's',
-                        116: 't',
-                        117: 'u',
-                        118: 'v',
-                        119: 'w',
-                        120: 'x',
-                        121: 'y',
-                        122: 'z'};
+            48:  '0',
+            49:  '1',
+            50:  '2',
+            51:  '3',
+            52:  '4',
+            53:  '5',
+            54:  '6',
+            55:  '7',
+            56:  '8',
+            57:  '9',
+            97:  'a',
+            98:  'b',
+            99:  'c',
+            100: 'd',
+            101: 'e',
+            102: 'f',
+            103: 'g',
+            104: 'h',
+            105: 'i',
+            106: 'j',
+            107: 'k',
+            108: 'l',
+            109: 'm',
+            110: 'n',
+            111: 'o',
+            112: 'p',
+            113: 'q',
+            114: 'r',
+            115: 's',
+            116: 't',
+            117: 'u',
+            118: 'v',
+            119: 'w',
+            120: 'x',
+            121: 'y',
+            122: 'z'};
 
 
 
@@ -74,6 +74,36 @@ module TSOS {
 
         return availPartitions;
     }
+
+        public nextAvailPartitions(): number
+        {
+            var part = -1;
+
+            for(var i = 0; (i < 3) && part == -1; i++)
+            {
+                if(this.loadedPartitions[i] == false)
+                {
+                    part = i;
+                }
+            }
+            return part;
+        }
+
+        public getPartitionBytes(partition : number): number[]
+        {
+            if(partition < 0 || partition > 2)
+                return null;
+
+            var base = this.partitionBaseAddress[partition];
+            var data: number[] = [];
+            var limit = base + 256;
+
+            for(var i = base; i < limit; i++)
+            {
+             data.push(_Memory.getMem(i));
+            }
+            return data;
+        }
 
      public loadProgram(prog : string, pid : number) : TSOS.PCB {
 
@@ -128,6 +158,50 @@ module TSOS {
          return PcB;
      }
 
+        public loadProgramBytes(prog : number[], partition : number) : boolean
+        {
+            if(partition < 0 || partition > 2)
+                return false;
+
+
+            // if (this.loadedPCB != null)
+            //   return null;
+
+
+            this.clrPartition(partition);
+
+            var base = this.partitionBaseAddress[partition];
+            var limit = base + _MemPartitionSize;
+_Kernel.krnTrace("base " + base.toString() + " part " + partition.toString());
+            var byteIndex = 0;
+
+            for (var i = base; (byteIndex < prog.length) && (i < limit ); i++) {
+      _Kernel.krnTrace("Index " + i.toString() + " value " + prog[byteIndex].toString());
+                _Memory.setMem(prog[byteIndex], i);
+                byteIndex++;
+            }
+
+            this.loadedPartitions[partition] = true;
+
+
+            TSOS.Control.updateMemTable();
+
+            return true;
+        }
+
+        public findPartitionFromBase(base : number): number
+        {
+            var ret = -1;
+
+            for(var i = 0; (i < this.partitionBaseAddress.length) && (ret == -1); i++)
+            {
+                if(this.partitionBaseAddress[i] == base)
+                    ret = i;
+            }
+
+            return ret;
+        }
+
      public clrPartition(iPartition: number)
         {
             if(iPartition < 0 || iPartition > 2)
@@ -138,7 +212,6 @@ module TSOS {
 
             for (var i = base; i < limit; i++) {
                 _Memory.setMem(0, i);
-                _Kernel.krnTrace("CLR index " + i.toString());
             }
             this.loadedPartitions[iPartition] = false;
         }

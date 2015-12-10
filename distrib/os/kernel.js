@@ -80,7 +80,10 @@ var TSOS;
                 this.krnInterruptHandler(interrupt.irq, interrupt.params);
             }
             else if (_CPU.isExecuting) {
-                _CPU.cycle();
+                if (!(_TraceMode == true && _NextStep == false)) {
+                    _CPU.cycle();
+                    _NextStep = false;
+                }
             }
             else {
                 this.krnTrace("Idle");
@@ -192,6 +195,142 @@ var TSOS;
                         _OsShell.outPutMsg("Quantum changed to " + params.toString() + ".");
                     }
                     break;
+                case CREATE_FILE_IRQ:
+                    var ret = _HardDrive.createFile(params);
+                    switch (ret) {
+                        case HDD_SUCCESS:
+                            _OsShell.outPutMsg("File has been created.");
+                            break;
+                        case HDD_NOT_FORMATTED:
+                            _OsShell.outPutMsg("Hard Drive not formatted.");
+                            break;
+                        case HDD_FILE_NAME_TO_LONG:
+                            _OsShell.outPutMsg("File name should be less than 60 characters.");
+                            break;
+                        case HDD_FILE_DIR_FULL:
+                            _OsShell.outPutMsg("File directory is full, cannot create file.");
+                            break;
+                        case HDD_FILE_NAME_DUPLICATE:
+                            _OsShell.outPutMsg("File name already exists, cannot have duplicate file names.");
+                            break;
+                        case HDD_DRIVE_FULL:
+                            _OsShell.outPutMsg("Hard Drive is full, cannot create file.");
+                            break;
+                        default:
+                            _OsShell.outPutMsg("Unknown Hard Drive Error.");
+                            break;
+                    }
+                    break;
+                case SET_SCHEDULE_IRQ:
+                    _SchedulingMethod = params;
+                    switch (params) {
+                        case ROUND_ROBIN:
+                            if (_timerOn == false) {
+                                _timerOn = true;
+                                _timerCount = 0;
+                            }
+                            _SchedulingMethod = ROUND_ROBIN;
+                            break;
+                        case FIRST_JOB_FIRST:
+                            _timerOn = false;
+                            _SchedulingMethod = FIRST_JOB_FIRST;
+                            break;
+                        case PRIORITY:
+                            _timerOn = false;
+                            _SchedulingMethod = PRIORITY;
+                            break;
+                        default:
+                            break;
+                    }
+                    break;
+                case GET_SCHEDULE_IRQ:
+                    switch (_SchedulingMethod) {
+                        case ROUND_ROBIN:
+                            break;
+                        case FIRST_JOB_FIRST:
+                            break;
+                        case PRIORITY:
+                            break;
+                    }
+                    break;
+                case WRITE_FILE_IRQ:
+                    var ret = _HardDrive.writeToFileText(params[0], params[1]);
+                    switch (ret) {
+                        case HDD_SUCCESS:
+                            _OsShell.outPutMsg("File has been written to.");
+                            break;
+                        case HDD_NOT_FORMATTED:
+                            _OsShell.outPutMsg("Hard Drive not formatted.");
+                            break;
+                        case HDD_FILE_NOT_FOUND:
+                            _OsShell.outPutMsg("File could not be located.");
+                            break;
+                        case HDD_DATA_CORRUPTED:
+                            _OsShell.outPutMsg("System is corrupted, please re-format.");
+                            break;
+                        case HDD_DRIVE_FULL:
+                            _OsShell.outPutMsg("Hard Drive is full, cannot create file.");
+                            break;
+                        default:
+                            _OsShell.outPutMsg("Unknown Hard Drive Error.");
+                            break;
+                    }
+                    break;
+                case READ_FILE_IRQ:
+                    var ret2 = _HardDrive.readToFileText(params);
+                    switch (ret2[0]) {
+                        case HDD_SUCCESS:
+                            _OsShell.outPutMsg(ret2[1]);
+                            break;
+                        case HDD_NOT_FORMATTED:
+                            _OsShell.outPutMsg("Hard Drive not formatted.");
+                            break;
+                        case HDD_FILE_NOT_FOUND:
+                            _OsShell.outPutMsg("File could not be located.");
+                            break;
+                        case HDD_DATA_CORRUPTED:
+                            _OsShell.outPutMsg("System is corrupted, please re-format.");
+                            break;
+                        case HDD_DRIVE_FULL:
+                            _OsShell.outPutMsg("Hard Drive is full, cannot create file.");
+                            break;
+                        default:
+                            _OsShell.outPutMsg("Unknown Hard Drive Error.");
+                            break;
+                    }
+                    break;
+                case DELETE_FILE_IRQ:
+                    var ret = _HardDrive.deleteFile(params);
+                    switch (ret) {
+                        case HDD_SUCCESS:
+                            _OsShell.outPutMsg("File has been deleted.");
+                            break;
+                        case HDD_NOT_FORMATTED:
+                            _OsShell.outPutMsg("Hard Drive not formatted.");
+                            break;
+                        case HDD_FILE_NOT_FOUND:
+                            _OsShell.outPutMsg("File could not be located.");
+                            break;
+                        default:
+                            _OsShell.outPutMsg("Unknown Hard Drive Error.");
+                            break;
+                    }
+                    break;
+                case FORMAT_IRQ:
+                    _HardDrive.format();
+                    _OsShell.outPutMsg("Drive is formatted.");
+                    break;
+                case LIST_FILES_IRQ:
+                    var fileNames = _HardDrive.listFiles();
+                    if (fileNames == null) {
+                        _OsShell.outPutMsg("Hard Drive not formatted.");
+                    }
+                    else {
+                        for (var i = 0; i < fileNames.length; i++) {
+                            _OsShell.outPutMsg(fileNames[i]);
+                        }
+                    }
+                    break;
                 default:
                     this.krnTrapError("Invalid Interrupt Request. irq=" + irq + " params=[" + params + "]");
             }
@@ -266,6 +405,30 @@ var TSOS;
             else {
                 _StdOut.putText(message2);
             }
+        };
+        Kernel.prototype.createFile = function (fileName) {
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(CREATE_FILE_IRQ, fileName));
+        };
+        Kernel.prototype.writeToFile = function (fileName, text) {
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(WRITE_FILE_IRQ, [fileName, text]));
+        };
+        Kernel.prototype.readFile = function (fileName) {
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(READ_FILE_IRQ, fileName));
+        };
+        Kernel.prototype.deleteFile = function (fileName) {
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(DELETE_FILE_IRQ, fileName));
+        };
+        Kernel.prototype.listFiles = function () {
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(LIST_FILES_IRQ, null));
+        };
+        Kernel.prototype.formatDrive = function () {
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(FORMAT_IRQ, null));
+        };
+        Kernel.prototype.setSchedule = function (type) {
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(SET_SCHEDULE_IRQ, type));
+        };
+        Kernel.prototype.getSchedule = function () {
+            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(GET_SCHEDULE_IRQ, null));
         };
         //
         // OS Utility Routines

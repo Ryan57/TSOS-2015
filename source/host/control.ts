@@ -88,6 +88,9 @@ module TSOS {
             // .. enable the Halt and Reset buttons ...
             (<HTMLButtonElement>document.getElementById("btnHaltOS")).disabled = false;
             (<HTMLButtonElement>document.getElementById("btnReset")).disabled = false;
+            (<HTMLButtonElement>document.getElementById("btnTrace")).disabled = false;
+            (<HTMLButtonElement>document.getElementById("btnStep")).disabled = false;
+
 
             // .. set focus on the OS console display ...
             document.getElementById("display").focus();
@@ -104,6 +107,10 @@ module TSOS {
             _Kernel = new Kernel();
             _Kernel.krnBootstrap();  // _GLaDOS.afterStartup() will get called in there, if configured.
 
+            _HardDrive = new TSOS.HDriveDeviceDriver(4, 8, 8);
+
+            this.createHDtable();
+
             this.hostCurStat("Started");
 
 
@@ -112,6 +119,29 @@ module TSOS {
             this.createRunProcessTable();
             this.createReadyQueueTable();
 
+        }
+
+        public static traceMode_click(btn): void
+        {
+            if(_TraceMode)
+            {
+                _TraceMode = false;
+                (<HTMLInputElement>document.getElementById("btnTrace")).value = "TraceModeOn";
+                (<HTMLInputElement>document.getElementById("btnStep")).disabled = true;
+                _NextStep = false;
+            }
+            else {
+                _TraceMode = true;
+                (<HTMLInputElement>document.getElementById("btnTrace")).value = "TraceModeOff";
+                (<HTMLInputElement>document.getElementById("btnStep")).disabled = false;
+                _NextStep = false;
+
+            }
+        }
+
+        public static step_click(btn): void
+        {
+            _NextStep = true;
         }
 
         public static hostBtnHaltOS_click(btn):void {
@@ -318,6 +348,8 @@ module TSOS {
             hdr.insertCell().innerHTML = '<b>' + 'Z Flag' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Base' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'OnHD' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Priority' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'TimeStamp' + '</b>';
 
             row.insertCell().innerHTML = "&nbsp";
@@ -329,19 +361,25 @@ module TSOS {
             row.insertCell().innerHTML = "&nbsp";
             row.insertCell().innerHTML = "&nbsp";
             row.insertCell().innerHTML = "&nbsp";
-
-            row = (<HTMLTableRowElement>tbl.insertRow());
-            row.insertCell().innerHTML = "&nbsp";
-            row.insertCell().innerHTML = "&nbsp";
-            row.insertCell().innerHTML = "&nbsp";
-            row.insertCell().innerHTML = "&nbsp";
-            row.insertCell().innerHTML = "&nbsp";
-            row.insertCell().innerHTML = "&nbsp";
-            row.insertCell().innerHTML = "&nbsp";
             row.insertCell().innerHTML = "&nbsp";
             row.insertCell().innerHTML = "&nbsp";
 
             row = (<HTMLTableRowElement>tbl.insertRow());
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
+
+            row = (<HTMLTableRowElement>tbl.insertRow());
+            row.insertCell().innerHTML = "&nbsp";
+            row.insertCell().innerHTML = "&nbsp";
             row.insertCell().innerHTML = "&nbsp";
             row.insertCell().innerHTML = "&nbsp";
             row.insertCell().innerHTML = "&nbsp";
@@ -353,53 +391,110 @@ module TSOS {
             row.insertCell().innerHTML = "&nbsp";
         }
 
-        public static updateReadyQueueTable() : void
-        {
+        public static updateReadyQueueTable() : void {
             var tbl = (<HTMLTableElement>document.getElementById("ReadyQueue"));
-            var row = (<HTMLTableRowElement>tbl.rows.item(1));
+            var row = null;
             var PCB;
             var insert = 0;
             var rowIndex = 2;
+            var endOfRows = false;
+   _Kernel.krnTrace("CTRL - redQ before " + tbl.rows.length.toString());
 
-            for(var i = 0; i < _Scheduler.readyQueue.getSize(); i++)
-            {
+            while(tbl.rows.length > 1){
+                tbl.deleteRow(tbl.rows.length - 1);
+            }
+ _Kernel.krnTrace("CTRL - redQ after " + _Scheduler.readyQueue.getSize().toString());
+
+            for (var i = 0; i < _Scheduler.readyQueue.getSize(); i++) {
                 PCB = _Scheduler.readyQueue.q[i];
-                (<HTMLTableCellElement>row.cells.item(0)).innerHTML = TSOS.Utils.padWithZeros(PCB.PID.toString(16),2);
-                (<HTMLTableCellElement>row.cells.item(1)).innerHTML = TSOS.Utils.padWithZeros(PCB.PC.toString(16),2);
-                (<HTMLTableCellElement>row.cells.item(2)).innerHTML = TSOS.Utils.padWithZeros(PCB.accumulator.toString(16),2);
-                (<HTMLTableCellElement>row.cells.item(3)).innerHTML = TSOS.Utils.padWithZeros(PCB.xReg.toString(16),2);
-                (<HTMLTableCellElement>row.cells.item(4)).innerHTML = TSOS.Utils.padWithZeros(PCB.yReg.toString(16),2);
-                (<HTMLTableCellElement>row.cells.item(5)).innerHTML = TSOS.Utils.padWithZeros(PCB.zFlag.toString(16),2);
-                (<HTMLTableCellElement>row.cells.item(6)).innerHTML = TSOS.Utils.padWithZeros(PCB.base.toString(16),4);
-                (<HTMLTableCellElement>row.cells.item(7)).innerHTML = TSOS.Utils.padWithZeros(PCB.limit.toString(16),4);
-                (<HTMLTableCellElement>row.cells.item(8)).innerHTML = TSOS.Utils.formatTimeString(PCB.timeStamp);
+                row = (<HTMLTableRowElement>tbl.insertRow());
+                (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padWithZeros(PCB.PID.toString(16), 2);
+                (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padWithZeros(PCB.PC.toString(16), 2);
+                (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padWithZeros(PCB.accumulator.toString(16), 2);
+                (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padWithZeros(PCB.xReg.toString(16), 2);
+                (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padWithZeros(PCB.yReg.toString(16), 2);
+                (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padWithZeros(PCB.zFlag.toString(16), 2);
+                (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padWithZeros(PCB.base.toString(16), 4);
+                (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padWithZeros(PCB.limit.toString(16), 4);
+                if (PCB.onHD)
+                    (<HTMLTableCellElement>row.insertCell()).innerHTML = "true";
+                else
+                    (<HTMLTableCellElement>row.insertCell()).innerHTML = "false";
 
-                if(i < 2)
-                {
-                    row = (<HTMLTableRowElement>tbl.rows.item(rowIndex));
-                    rowIndex++;
-                }
-                insert++;
+
+                (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padWithZeros(PCB.priority.toString(), 2);
+                (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.formatTimeString(PCB.timeStamp);
+
             }
 
-            for(var n = insert; n < 3; n++)
+        }
+
+
+
+        public static createHDtable()
+        {
+            var tbl = (<HTMLTableElement>document.getElementById("HardDriveTable"));
+            var row = (<HTMLTableRowElement>tbl.insertRow());
+            var cell = null;
+            var FileBlock = new TSOS.FileBlock();
+                (<HTMLTableCellElement>row.insertCell()).innerHTML = "Location";
+                (<HTMLTableCellElement>row.insertCell()).innerHTML = "In Use";
+                (<HTMLTableCellElement>row.insertCell()).innerHTML = "T";
+                (<HTMLTableCellElement>row.insertCell()).innerHTML = "S";
+                (<HTMLTableCellElement>row.insertCell()).innerHTML = "B";
+
+            for(var i = 0; i < 60; i++)
             {
-                (<HTMLTableCellElement>row.cells.item(0)).innerHTML = "&nbsp";
-                (<HTMLTableCellElement>row.cells.item(1)).innerHTML = "&nbsp";
-                (<HTMLTableCellElement>row.cells.item(2)).innerHTML = "&nbsp";
-                (<HTMLTableCellElement>row.cells.item(3)).innerHTML = "&nbsp";
-                (<HTMLTableCellElement>row.cells.item(4)).innerHTML = "&nbsp";
-                (<HTMLTableCellElement>row.cells.item(5)).innerHTML = "&nbsp";
-                (<HTMLTableCellElement>row.cells.item(6)).innerHTML = "&nbsp";
-                (<HTMLTableCellElement>row.cells.item(7)).innerHTML = "&nbsp";
-                (<HTMLTableCellElement>row.cells.item(8)).innerHTML = "&nbsp";
+                (<HTMLTableCellElement>row.insertCell()).innerHTML = (i+1).toString();
+            }
 
-                if(i < 2)
+            for(var t = 0; t < _HardDrive.tracks; t++)
+            {
+                for(var s = 0; s < _HardDrive.sectors; s++)
                 {
-                    row = (<HTMLTableRowElement>tbl.rows.item(rowIndex));
-                    rowIndex++;
+                    for(var b = 0; b < _HardDrive.secBlock; b++)
+                    {
+                        row = (<HTMLTableRowElement>tbl.insertRow());
+                        row.insertCell().innerHTML = t.toString() + '.' + s.toString() + '.' + b.toString();
+                        FileBlock.loadBlock(t, s, b);
+
+                        for(var i = 0; i < 64; i++)
+                        {
+                            (<HTMLTableCellElement>row.insertCell()).innerHTML = FileBlock.getByte(i).toString();
+                        }
+                    }
                 }
             }
+
+        }
+
+        public static updateHDtable()
+        {
+            var tbl = (<HTMLTableElement>document.getElementById("HardDriveTable"));
+            var row = null;
+            var fBlock = new TSOS.FileBlock();
+            var rowInt : number = 1;
+
+            for(var t = 0; t < _HardDrive.tracks; t++) {
+                for (var s = 0; s < _HardDrive.sectors; s++) {
+                    for (var b = 0; b < _HardDrive.secBlock; b++) {
+                        fBlock.loadBlock(t, s, b);
+                        row = (<HTMLTableRowElement>tbl.rows[rowInt]);
+                        rowInt++;
+
+                        (<HTMLTableCellElement>row.cells[1]).innerHTML = fBlock.inUse ? "01" : "00";
+                        (<HTMLTableCellElement>row.cells[2]).innerHTML = TSOS.Utils.padWithZeros(fBlock.track.toString(), 2);
+                        (<HTMLTableCellElement>row.cells[3]).innerHTML = TSOS.Utils.padWithZeros(fBlock.sector.toString(), 2);
+                        (<HTMLTableCellElement>row.cells[4]).innerHTML = TSOS.Utils.padWithZeros(fBlock.block.toString(), 2);
+
+                        for(var i = 4; i < 64; i++)
+                        {
+                            (<HTMLTableCellElement>row.cells[i + 1]).innerHTML = TSOS.Utils.padWithZeros(fBlock.getByte(i).toString(16), 2);
+                        }
+                    }
+                }
+            }
+
         }
     }
 }

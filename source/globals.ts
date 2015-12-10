@@ -48,6 +48,43 @@ const QUANTUM_CHANGE_IRQ: number = 14;
 
 const CLEAR_PARTITION_IRQ: number = 15;
 
+const CREATE_FILE_IRQ: number = 16;
+
+const WRITE_FILE_IRQ: number = 17;
+
+const READ_FILE_IRQ: number = 18;
+
+const DELETE_FILE_IRQ: number = 19;
+
+const LIST_FILES_IRQ: number = 20;
+
+const FORMAT_IRQ: number = 21;
+
+const SET_SCHEDULE_IRQ = 22;
+
+const GET_SCHEDULE_IRQ = 23;
+
+
+//..
+// HDriveDeviceDriver Error Codes
+//..
+
+const HDD_NOT_FORMATTED: number = 200;
+
+const HDD_FILE_NAME_TO_LONG: number = 201;
+
+const HDD_FILE_DIR_FULL: number = 202;
+
+const HDD_FILE_NAME_DUPLICATE: number = 203;
+
+const HDD_DRIVE_FULL: number = 204;
+
+const HDD_SUCCESS: number = 205;
+
+const HDD_FILE_NOT_FOUND: number = 206;
+
+const HDD_DATA_CORRUPTED: number = 207;
+
 
 //
 // Global Variables
@@ -59,6 +96,14 @@ var _MemMax: number = 768;
 var _MemPartitionSize = 256;
 
 var _Scheduler: TSOS.scheduler;
+
+const ROUND_ROBIN = 0;
+const FIRST_JOB_FIRST = 1;
+const PRIORITY = 2;
+var _SchedulingMethod: number = ROUND_ROBIN;
+
+
+var _HardDrive: TSOS.HDriveDeviceDriver;
 
 var _pcb: TSOS.PCB;
 
@@ -81,6 +126,8 @@ var _DefaultFontSize: number = 13;
 var _FontHeightMargin: number = 4;              // Additional space added to font size when advancing a line.
 
 var _Trace: boolean = true;  // Default the OS trace to be on.
+var _TraceMode: boolean = false;
+var _NextStep: boolean = false;
 
 // The OS Kernel and its queues.
 var _Kernel: TSOS.Kernel;

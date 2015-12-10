@@ -63,6 +63,26 @@ var TSOS;
             }
             return availPartitions;
         };
+        MemoryManager.prototype.nextAvailPartitions = function () {
+            var part = -1;
+            for (var i = 0; (i < 3) && part == -1; i++) {
+                if (this.loadedPartitions[i] == false) {
+                    part = i;
+                }
+            }
+            return part;
+        };
+        MemoryManager.prototype.getPartitionBytes = function (partition) {
+            if (partition < 0 || partition > 2)
+                return null;
+            var base = this.partitionBaseAddress[partition];
+            var data = [];
+            var limit = base + 256;
+            for (var i = base; i < limit; i++) {
+                data.push(_Memory.getMem(i));
+            }
+            return data;
+        };
         MemoryManager.prototype.loadProgram = function (prog, pid) {
             var found = false;
             var partition = 0;
@@ -97,6 +117,33 @@ var TSOS;
             TSOS.Control.updateMemTable();
             return PcB;
         };
+        MemoryManager.prototype.loadProgramBytes = function (prog, partition) {
+            if (partition < 0 || partition > 2)
+                return false;
+            // if (this.loadedPCB != null)
+            //   return null;
+            this.clrPartition(partition);
+            var base = this.partitionBaseAddress[partition];
+            var limit = base + _MemPartitionSize;
+            _Kernel.krnTrace("base " + base.toString() + " part " + partition.toString());
+            var byteIndex = 0;
+            for (var i = base; (byteIndex < prog.length) && (i < limit); i++) {
+                _Kernel.krnTrace("Index " + i.toString() + " value " + prog[byteIndex].toString());
+                _Memory.setMem(prog[byteIndex], i);
+                byteIndex++;
+            }
+            this.loadedPartitions[partition] = true;
+            TSOS.Control.updateMemTable();
+            return true;
+        };
+        MemoryManager.prototype.findPartitionFromBase = function (base) {
+            var ret = -1;
+            for (var i = 0; (i < this.partitionBaseAddress.length) && (ret == -1); i++) {
+                if (this.partitionBaseAddress[i] == base)
+                    ret = i;
+            }
+            return ret;
+        };
         MemoryManager.prototype.clrPartition = function (iPartition) {
             if (iPartition < 0 || iPartition > 2)
                 return;
@@ -104,7 +151,6 @@ var TSOS;
             var limit = base + _MemPartitionSize;
             for (var i = base; i < limit; i++) {
                 _Memory.setMem(0, i);
-                _Kernel.krnTrace("CLR index " + i.toString());
             }
             this.loadedPartitions[iPartition] = false;
         };

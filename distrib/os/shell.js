@@ -62,7 +62,7 @@ var TSOS;
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellStatChange, "statchange", "- Displays current OS status");
             this.commandList[this.commandList.length] = sc;
-            sc = new TSOS.ShellCommand(this.shellLoad, "load", "- Ensures valid hex digits and spaces");
+            sc = new TSOS.ShellCommand(this.shellLoad, "load", "<number>- Ensures valid hex digits and spaces from program input, & sets priority by <number>.");
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellRun, "run", "<number>- Runs a desired process command by <number>.");
             this.commandList[this.commandList.length] = sc;
@@ -77,6 +77,22 @@ var TSOS;
             sc = new TSOS.ShellCommand(this.shellQuantum, "quantum", "- Quantum sets the scheduling process to Round Robin.");
             this.commandList[this.commandList.length] = sc;
             sc = new TSOS.ShellCommand(this.shellPS, "ps", "- Displays each pid for all active processes.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellCreate, "create", "<string>- Creates a file.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellWrite, "write", "- Writes to an existing file.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellRead, "read", "- Reads data from an existing file.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellDelete, "delete", "- Deletes an existing file.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellList, "ls", "- Lists all existing files.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellFormat, "format", "- Formats HardDrive.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellSetSchedule, "setSchedule", "<int>- Sets the scheduling method.");
+            this.commandList[this.commandList.length] = sc;
+            sc = new TSOS.ShellCommand(this.shellGetSchedule, "getSchedule", "- Gets the current scheduling method being used.");
             this.commandList[this.commandList.length] = sc;
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -249,6 +265,9 @@ var TSOS;
                     case "ver":
                         _StdOut.putText("Ver displays the current OS version running.");
                         break;
+                    case "cls":
+                        _StdOut.putText("Clears the screen.");
+                        break;
                     case "whereami":
                         _StdOut.putText("whereami displays the approximate location from the sun.");
                         break;
@@ -287,6 +306,30 @@ var TSOS;
                         break;
                     case "ps":
                         _StdOut.putText("Displays the pid for each active process.");
+                        break;
+                    case "create":
+                        _StdOut.putText("Creates a file, by inputting 'create name'.");
+                        break;
+                    case "write":
+                        _StdOut.putText("Writes to an existing file.");
+                        break;
+                    case "read":
+                        _StdOut.putText("Reads data from an existing file.");
+                        break;
+                    case "delete":
+                        _StdOut.putText("Deletes an existing file.");
+                        break;
+                    case "ls":
+                        _StdOut.putText("Displays all existing files.");
+                        break;
+                    case "setschedule":
+                        _StdOut.putText("setSchedule sets the scheduler by inputting setSchedule type.");
+                        break;
+                    case "getschedule":
+                        _StdOut.putText("getSchedule displays the current scheduling method in use.");
+                        break;
+                    case "format":
+                        _StdOut.putText("Formats the HardDrive.");
                         break;
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
@@ -367,6 +410,10 @@ var TSOS;
         };
         Shell.prototype.shellLoad = function (args) {
             var input = document.getElementById("taProgramInput").value;
+            if (args.length == 0)
+                _pcb.priority = 10;
+            else
+                _pcb.priority = args;
             if (input.trim().length == 0)
                 _StdOut.putText("No program input found");
             else if (input.match("[^a-f|A-F|0-9| ]+"))
@@ -401,6 +448,8 @@ var TSOS;
         };
         Shell.prototype.shellLoadAll = function (args) {
             var input = document.getElementById("taProgramInput").value;
+            if (args.length == 0)
+                _pcb.priority = 10;
             if (input.trim().length == 0)
                 _StdOut.putText("No program input found");
             else if (input.match("[^a-f|A-F|0-9| ]+"))
@@ -460,6 +509,73 @@ var TSOS;
         };
         Shell.prototype.shellPS = function (args) {
             _Kernel.displayPS();
+        };
+        Shell.prototype.shellCreate = function (args) {
+            if (args.length > 0)
+                _Kernel.createFile(args[0]);
+            else
+                _StdOut.putText("Usage - create <string>");
+        };
+        Shell.prototype.shellWrite = function (args) {
+            var text;
+            var fileName;
+            if (args.length > 1) {
+                fileName = args[0];
+                args.splice(0, 1);
+                text = args.join(' ');
+                _Kernel.writeToFile(fileName, text);
+            }
+            else
+                _StdOut.putText("Usage - write <string> <string>");
+        };
+        Shell.prototype.shellRead = function (args) {
+            if (args.length > 0)
+                _Kernel.readFile(args[0]);
+            else
+                _StdOut.putText("Usage - read <string>");
+        };
+        Shell.prototype.shellDelete = function (args) {
+            if (args.length > 0)
+                _Kernel.deleteFile(args[0]);
+            else
+                _StdOut.putText("Usage - delete <string>");
+        };
+        Shell.prototype.shellList = function (args) {
+            _Kernel.listFiles();
+        };
+        Shell.prototype.shellFormat = function (args) {
+            _Kernel.formatDrive();
+        };
+        Shell.prototype.shellSetSchedule = function (args) {
+            var type;
+            var rr;
+            var pr;
+            var fjf;
+            if (args == null) {
+                _StdOut.putText("Scheduler methods: (rr = round robin, pr = priority, & fjf = first job first");
+                _StdOut.putText("Usage - setSchedule <string>");
+            }
+            else if (args == pr) {
+                type = 2;
+                //_SchedulingMethod = 2;
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(SET_SCHEDULE_IRQ, type));
+                _StdOut.putText("Scheduler set to Priority.");
+            }
+            else if (args == fjf) {
+                type = 1;
+                // _SchedulingMethod = 1;
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(SET_SCHEDULE_IRQ, type));
+                _StdOut.putText("Scheduler set to First Job First.");
+            }
+            else {
+                type = 0;
+                // _SchedulingMethod = 0;
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(SET_SCHEDULE_IRQ, type));
+                _StdOut.putText("Scheduler set to Round Robin.");
+            }
+        };
+        Shell.prototype.shellGetSchedule = function (args) {
+            _Kernel.getSchedule();
         };
         return Shell;
     })();

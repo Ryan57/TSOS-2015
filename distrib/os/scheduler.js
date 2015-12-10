@@ -58,9 +58,43 @@ var TSOS;
             // Load program, and get pcb. If program already loaded,
             // pcb is null
             var PcB = _MemoryManager.loadProgram(progInput, this.nextPID);
+            var ret = 0;
             // Return false if program already loaded
-            if (PcB == null)
-                return null;
+            if (PcB == null) {
+                if (_HardDrive.isFormatted) {
+                    PcB = new TSOS.PCB();
+                    PcB.PID = this.nextPID;
+                    var readIndex = 0;
+                    var byte = "";
+                    var data = [];
+                    var progInputBytes = progInput.split(' ');
+                    for (var i = 0; i < 256; i++) {
+                        if (readIndex < progInputBytes.length) {
+                            byte = progInputBytes[readIndex];
+                            if (byte.length == 0) {
+                                byte += '0';
+                            }
+                            readIndex++;
+                        }
+                        else {
+                            byte = '0';
+                        }
+                        _Kernel.krnTrace("Sched- byte " + byte);
+                        var num = parseInt(byte, 16);
+                        _Kernel.krnTrace("Sched- num " + num.toString());
+                        data.push(parseInt(byte, 16));
+                    }
+                    _Kernel.krnTrace("before CSF " + data.toString());
+                    ret = this.createSwapFile(data, this.nextPID);
+                    _Kernel.krnTrace("after CSF " + ret.toString());
+                    if (ret != HDD_SUCCESS)
+                        return null;
+                    PcB.onHD = true;
+                    TSOS.Control.updateHDtable();
+                }
+                else
+                    return null;
+            }
             this.residentQueue.enqueue(PcB);
             // Send trace message
             _Kernel.krnTrace("Created process with PID " + this.nextPID + ".");
@@ -68,6 +102,44 @@ var TSOS;
             this.nextPID++;
             // Return true
             return PcB;
+        };
+        scheduler.prototype.createSwapFile = function (progInput, pid) {
+            var PCB = new TSOS.PCB();
+            var ret = 0;
+            var fileName = "~" + pid.toString();
+            ret = _HardDrive.createFile(fileName, false);
+            if (ret != HDD_SUCCESS)
+                return ret;
+            ret = _HardDrive.writeToFileData(fileName, progInput, false);
+            if (ret != HDD_SUCCESS)
+                return ret;
+            return HDD_SUCCESS;
+        };
+        scheduler.prototype.loadSwapFile = function (PCB, partition) {
+            var fileName = "~" + PCB.PID.toString();
+            var ret = HDD_SUCCESS;
+            var ret2 = null;
+            var data = null;
+            ret2 = _HardDrive.readToFileData(fileName, false);
+            if (ret2[0] != HDD_SUCCESS)
+                return ret2[0];
+            data = ret2[1];
+            _Kernel.krnTrace("before LSF- load " + partition.toString());
+            _MemoryManager.loadProgramBytes(data, partition);
+            _Kernel.krnTrace("after LSF- load ");
+            _HardDrive.deleteFile(fileName, false);
+            return HDD_SUCCESS;
+        };
+        scheduler.prototype.findLastPartition = function () {
+            var part = -1;
+            var pcb = null;
+            for (var i = this.readyQueue.q.length - 1; (i >= 0) && (part == -1); i--) {
+                pcb = this.readyQueue.q[i];
+                if (pcb.onHD != true) {
+                    part = _MemoryManager.findPartitionFromBase(pcb.base);
+                }
+            }
+            return [part, pcb];
         };
         scheduler.prototype.executeProcess = function (pid) {
             if (this.residentQueue.getSize() == 0)
@@ -79,6 +151,11 @@ var TSOS;
             TSOS.Control.updateReadyQueueTable();
             if (this.processRunning == null)
                 this.contextSwitch();
+            else {
+                if (this.processRunning.priority < PCB.priority) {
+                    this.contextSwitch();
+                }
+            }
             // Copy all register values from pcb to cpu registers
             /*    _CPU.Xreg = this.processRunning.xReg;
                 _CPU.Yreg = this.processRunning.yReg;
@@ -142,6 +219,12 @@ var TSOS;
             return PCB;
         };
         scheduler.prototype.contextSwitch = function () {
+            var newPCB = null;
+            var oldPCB = null;
+            var part = 0;
+            var ret = null;
+            var data = null;
+            var tempPCB = null;
             _Kernel.krnTrace("Performing context switch.");
             if (this.processRunning != null) {
                 if (this.readyQueue.getSize() > 0) {
@@ -152,8 +235,33 @@ var TSOS;
                     this.processRunning.zFlag = _CPU.Zflag;
                     this.processRunning.base = _CPU.base;
                     this.processRunning.limit = _CPU.limit;
-                    this.readyQueue.enqueue(this.processRunning);
-                    this.processRunning = this.readyQueue.dequeue();
+                    oldPCB = this.processRunning;
+                    if (_SchedulingMethod != PRIORITY)
+                        this.readyQueue.enqueue(this.processRunning);
+                    else {
+                        this.priorityQueueAdd(this.processRunning);
+                    }
+                    newPCB = this.readyQueue.dequeue();
+                    if (newPCB.onHD == true) {
+                        part = _MemoryManager.nextAvailPartitions();
+                        if (part == -1) {
+                            ret = this.findLastPartition();
+                            data = _MemoryManager.getPartitionBytes(ret[0]);
+                            this.createSwapFile(data, ret[1].PID);
+                            ret[1].onHD = true;
+                            part = ret[0];
+                        }
+                        else {
+                        }
+                        _Kernel.krnTrace("CS - partition " + part.toString());
+                        this.loadSwapFile(newPCB, part);
+                        newPCB.onHD = false;
+                        newPCB.base = _MemoryManager.partitionBaseAddress[part];
+                        newPCB.limit = _MemPartitionSize;
+                        _Kernel.krnTrace("CS - base " + newPCB.base);
+                        TSOS.Control.updateHDtable();
+                    }
+                    this.processRunning = newPCB;
                     _CPU.Xreg = this.processRunning.xReg;
                     _CPU.Yreg = this.processRunning.yReg;
                     _CPU.Acc = this.processRunning.accumulator;
@@ -161,16 +269,39 @@ var TSOS;
                     _CPU.Zflag = this.processRunning.zFlag;
                     _CPU.base = this.processRunning.base;
                     _CPU.limit = this.processRunning.limit;
-                    _timerOn = true;
+                    if (_SchedulingMethod == ROUND_ROBIN)
+                        _timerOn = true;
                     _CPU.isExecuting = true;
                 }
             }
             else {
-                _Kernel.krnTrace("that 2-1");
                 if (this.readyQueue.getSize() > 0) {
-                    _Kernel.krnTrace("that 2-2");
-                    this.processRunning = this.readyQueue.dequeue();
-                    _Kernel.krnTrace("that 2-3");
+                    if (_SchedulingMethod != PRIORITY)
+                        this.readyQueue.enqueue(this.processRunning);
+                    else {
+                        this.priorityQueueAdd(this.processRunning);
+                    }
+                    newPCB = this.readyQueue.dequeue();
+                    if (newPCB.onHD == true) {
+                        part = _MemoryManager.nextAvailPartitions();
+                        if (part == -1) {
+                            ret = this.findLastPartition();
+                            data = _MemoryManager.getPartitionBytes(ret[0]);
+                            this.createSwapFile(data, ret[1].PID);
+                            ret[1].onHD = true;
+                            part = ret[0];
+                        }
+                        else {
+                        }
+                        // _Kernel.krnTrace("CS - partition " + part.toString());
+                        this.loadSwapFile(newPCB, part);
+                        newPCB.onHD = false;
+                        newPCB.base = _MemoryManager.partitionBaseAddress[part];
+                        newPCB.limit = _MemPartitionSize;
+                        //  _Kernel.krnTrace("CS - base " + newPCB.base);
+                        TSOS.Control.updateHDtable();
+                    }
+                    this.processRunning = newPCB;
                     _CPU.Xreg = this.processRunning.xReg;
                     _CPU.Yreg = this.processRunning.yReg;
                     _CPU.Acc = this.processRunning.accumulator;
@@ -190,6 +321,23 @@ var TSOS;
             }
             TSOS.Control.updateRunProcessTable();
             TSOS.Control.updateReadyQueueTable();
+        };
+        scheduler.prototype.priorityQueueAdd = function (pcb) {
+            var temp = [];
+            var inserted = false;
+            for (var i = 0; i < this.residentQueue.getSize(); i++) {
+                if (!inserted && (pcb.priority < this.residentQueue.q[i].priority)) {
+                    temp.push(pcb);
+                    inserted = true;
+                    i = i - 1;
+                }
+                else {
+                    temp.push(this.residentQueue.q[i]);
+                }
+            }
+            if (!inserted)
+                temp.push(pcb);
+            this.residentQueue.q = temp;
         };
         scheduler.prototype.findPID = function (baseAddr) {
             var PID = -1;

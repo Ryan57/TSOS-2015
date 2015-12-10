@@ -12,6 +12,8 @@
     <script type="text/javascript" src="distrib/globals.js"></script>
 
     <!-- Host (Virtual Machine / Hardware Simulation) Routines -->
+    <script type="text/javascript" src="distrib/host/fileBlock.js"></script>
+    <script type="text/javascript" src="distrib/host/HDriveDeviceDriver.js"></script>
     <script type="text/javascript" src="distrib/host/control.js"></script>
     <script type="text/javascript" src="distrib/host/devices.js"></script>
     <script type="text/javascript" src="distrib/host/cpu.js"></script>
@@ -38,7 +40,7 @@
     <script type="text/javascript" src="distrib/utils.js"></script>
     <!-- Uncomment this line below to enable GLaDOS testing -->
 
-   <!-- <script type="text/javascript" src="http://www.labouseur.com/courses/os/projects/glados.js"></script> -->
+    <!-- <script type="text/javascript" src="http://www.labouseur.com/courses/os/projects/glados.js"></script> -->
 </head>
 
 <body onload="onDocumentLoad()">
@@ -71,6 +73,20 @@
                value="Reset"
                tabindex="2"
                onclick="TSOS.Control.hostBtnReset_click(this);">
+        <input type="button"
+               id = "btnTrace"
+               class="normal_button"
+               disabled="disabled"
+               value="TraceModeOn"
+               tabindex="3"
+               onclick="TSOS.Control.traceMode_click(this);">
+        <input type="button"
+               id = "btnStep"
+               class="normal_button"
+               disabled="disabled"
+               value="Step"
+               tabindex="4"
+               onclick="TSOS.Control.step_click(this);">
     </div>
 
     <div id="divConsole" style="margin:4px; width:500px; height:500px; float:left;">
@@ -85,59 +101,67 @@
         </label>
     </div>
 
-   <div id="left alligned items" style="float:left; margin-left: 4px">
-    <div id="divLog">
-        <label>
-            Host Log
-            <br>
+    <div id="left alligned items" style="float:left; margin-left: 4px">
+        <div id="divLog">
+            <label>
+                Host Log
+                <br>
          <textarea name="taHostLog"
                    id  ="taHostLog"
                    rows="26"
                    cols="48"
                  ></textarea>
-        </label>
-     </div>
-       <div id="divUserProgramInput">
-           <label>
-               User Program Input
-               <br>
+            </label>
+        </div>
+        <div id="divUserProgramInput">
+            <label>
+                User Program Input
+                <br>
          <textarea name="taProgramInput"
                    id  ="taProgramInput"
                    rows="8"
                    cols="48"
                  ></textarea>
-           </label>
-       </div>
-   </div>
+            </label>
+        </div>
+    </div>
 
-   <div id="right alligned items" style="float:left; margin-left: 4px; width: 300px;">
-    <div id="divMemTable" style="margin:7px; height:200px; width:277px; background-color:white; overflow:auto;">
-        <label>
-            Memory
-        </label>
-        <br>
-        <table id="MemTable" background-color="white" border="2">
-        </table>
+    <div id="right alligned items" style="float:left; margin-left: 4px; width: 300px;">
+        <div id="divMemTable" style="margin:7px; height:200px; width:277px; background-color:white; overflow:auto;">
+            <label>
+                Memory
+            </label>
+            <br>
+            <table id="MemTable" background-color="white" border="2">
+            </table>
+        </div>
+        <div id="divHardDriveTable" style="margin:7px; height:200px; width:277px; background-color:white; overflow:auto;">
+            <label>
+                HardDriveTable
+            </label>
+            <br>
+            <table id="HardDriveTable" background-color="white" border="2">
+            </table>
+        </div>
+        <div id="divCPUReg" style="margin:7px">
+            <label>
+                CPU Registers
+            </label>
+            <br>
+            <table id="CPU" border="2" height="117">
+            </table>
+        </div>
+        <div id="divRunningProcess" style="margin:7px;">
+            <label>Running Process</label>
+            <table id="RunningProcess" border="2">
+            </table>
+        </div>
+        <div id="divReadyQueue" style="margin:7px; height:150px; width:350px;  overflow : auto;">
+            <label>Ready Queue</label>
+            <table id="ReadyQueue" border="2">
+            </table>
+        </div>
     </div>
-    <div id="divCPUReg" style="margin:7px">
-        <label>
-            CPU Registers
-        </label>
-        <br>
-        <table id="CPU" border="2" height="117">
-        </table>
-    </div>
-       <div id="divRunningProcess" style="margin:7px;">
-           <label>Running Process</label>
-           <table id="RunningProcess" border="2">
-           </table>
-       </div>
-       <div id="divReadyQueue" style="margin:7px;">
-           <label>Ready Queue</label>
-           <table id="ReadyQueue" border="2">
-           </table>
-       </div>
-   </div>
 
 </div>
 

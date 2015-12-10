@@ -34,50 +34,50 @@ module TSOS {
 
             // ver
             sc = new ShellCommand(this.shellVer,
-                                  "ver",
-                                  "- Displays current version data for this OS.");
+                "ver",
+                "- Displays current version data for this OS.");
             this.commandList[this.commandList.length] = sc;
 
             // help
             sc = new ShellCommand(this.shellHelp,
-                                  "help",
-                                  "- This is the help command. Seek help.");
+                "help",
+                "- This is the help command. Seek help.");
             this.commandList[this.commandList.length] = sc;
 
             // shutdown
             sc = new ShellCommand(this.shellShutdown,
-                                  "shutdown",
-                                  "- Shuts down the virtual OS but leaves the underlying host / hardware simulation running.");
+                "shutdown",
+                "- Shuts down the virtual OS but leaves the underlying host / hardware simulation running.");
             this.commandList[this.commandList.length] = sc;
 
             // cls
             sc = new ShellCommand(this.shellCls,
-                                  "cls",
-                                  "- Clears the screen and resets the cursor position.");
+                "cls",
+                "- Clears the screen and resets the cursor position.");
             this.commandList[this.commandList.length] = sc;
 
             // man <topic>
             sc = new ShellCommand(this.shellMan,
-                                  "man",
-                                  "<topic> - Displays the MANual page for <topic>.");
+                "man",
+                "<topic> - Displays the MANual page for <topic>.");
             this.commandList[this.commandList.length] = sc;
 
             // trace <on | off>
             sc = new ShellCommand(this.shellTrace,
-                                  "trace",
-                                  "<on | off> - Turns the OS trace on or off.");
+                "trace",
+                "<on | off> - Turns the OS trace on or off.");
             this.commandList[this.commandList.length] = sc;
 
             // rot13 <string>
             sc = new ShellCommand(this.shellRot13,
-                                  "rot13",
-                                  "<string> - Does rot13 obfuscation on <string>.");
+                 "rot13",
+                 "<string> - Does rot13 obfuscation on <string>.");
             this.commandList[this.commandList.length] = sc;
 
             // prompt <string>
             sc = new ShellCommand(this.shellPrompt,
-                                  "prompt",
-                                  "<string> - Sets the prompt.");
+                 "prompt",
+                "<string> - Sets the prompt.");
             this.commandList[this.commandList.length] = sc;
 
             sc = new ShellCommand(this.shellTest,
@@ -112,7 +112,7 @@ module TSOS {
 
             sc = new ShellCommand(this.shellLoad,
                 "load",
-                "- Ensures valid hex digits and spaces");
+                "<number>- Ensures valid hex digits and spaces from program input, & sets priority by <number>.");
             this.commandList[this.commandList.length] = sc;
 
             sc = new ShellCommand(this.shellRun,
@@ -149,6 +149,47 @@ module TSOS {
                 "ps",
                 "- Displays each pid for all active processes.");
             this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellCreate,
+                "create",
+                "<string>- Creates a file.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellWrite,
+                "write",
+                "- Writes to an existing file.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellRead,
+                "read",
+                "- Reads data from an existing file.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellDelete,
+                "delete",
+                "- Deletes an existing file.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellList,
+                "ls",
+                "- Lists all existing files.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellFormat,
+                "format",
+                "- Formats HardDrive.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellSetSchedule,
+                "setSchedule",
+                "<int>- Sets the scheduling method.");
+            this.commandList[this.commandList.length] = sc;
+
+            sc = new ShellCommand(this.shellGetSchedule,
+                "getSchedule",
+                "- Gets the current scheduling method being used.");
+            this.commandList[this.commandList.length] = sc;
+
 
             // ps  - list the running processes and their IDs
             // kill <id> - kills the specified process id.
@@ -343,6 +384,9 @@ module TSOS {
                     case "ver":
                         _StdOut.putText("Ver displays the current OS version running.");
                         break;
+                    case "cls":
+                        _StdOut.putText("Clears the screen.");
+                        break;
                     case "whereami":
                         _StdOut.putText("whereami displays the approximate location from the sun.");
                         break;
@@ -363,7 +407,7 @@ module TSOS {
                         _StdOut.putText("Checks for valid Hex digits and loads them into a partition.");
                         break;
                     case "loadAll":
-                        _StdOut.putText("Loads all valid Hex digits into available partitions")
+                        _StdOut.putText("Loads all valid Hex digits into available partitions");
                     case "run":
                         _StdOut.putText("Run's a desired process by inputting run pid.");
                         break;
@@ -380,8 +424,33 @@ module TSOS {
                         _StdOut.putText("Quantum sets the scheduler to Round Robin.");
                         break;
                     case "ps":
-                        _StdOut.putText("Displays the pid for each active process.")
+                        _StdOut.putText("Displays the pid for each active process.");
                         break;
+                    case "create":
+                        _StdOut.putText("Creates a file, by inputting 'create name'.");
+                        break;
+                    case "write":
+                        _StdOut.putText("Writes to an existing file.");
+                        break;
+                    case "read":
+                        _StdOut.putText("Reads data from an existing file.");
+                        break;
+                    case "delete":
+                        _StdOut.putText("Deletes an existing file.");
+                        break;
+                    case "ls":
+                        _StdOut.putText("Displays all existing files.");
+                        break;
+                    case "setschedule":
+                        _StdOut.putText("setSchedule sets the scheduler by inputting setSchedule type.");
+                        break;
+                    case "getschedule":
+                        _StdOut.putText("getSchedule displays the current scheduling method in use.");
+                        break;
+                    case "format":
+                        _StdOut.putText("Formats the HardDrive.");
+                        break;
+
                     default:
                         _StdOut.putText("No manual entry for " + args[0] + ".");
                 }
@@ -471,6 +540,11 @@ module TSOS {
         public shellLoad(args) {
             var input : string = (<HTMLInputElement>document.getElementById("taProgramInput")).value;
 
+            if(args.length == 0)
+                _pcb.priority = 10;
+            else
+                _pcb.priority = args;
+
             if( input.trim().length == 0)
                 _StdOut.putText("No program input found");
             else if( input.match("[^a-f|A-F|0-9| ]+"))
@@ -516,6 +590,9 @@ module TSOS {
 
         public shellLoadAll(args) {
             var input:string = (<HTMLInputElement>document.getElementById("taProgramInput")).value;
+
+            if(args.length == 0)
+                _pcb.priority = 10;
 
             if (input.trim().length == 0)
                 _StdOut.putText("No program input found");
@@ -601,6 +678,98 @@ module TSOS {
         public shellPS(args)
         {
             _Kernel.displayPS();
+        }
+
+        public shellCreate(args)
+        {
+            if(args.length > 0)
+                _Kernel.createFile(args[0]);
+
+            else
+                _StdOut.putText("Usage - create <string>");
+        }
+
+        public shellWrite(args)
+        {
+            var text;
+            var fileName;
+
+            if(args.length > 1)
+            {
+                fileName = args[0];
+                args.splice(0, 1);
+                text = args.join(' ');
+                _Kernel.writeToFile(fileName, text);
+            }
+
+            else
+                _StdOut.putText("Usage - write <string> <string>");
+        }
+
+        public shellRead(args)
+        {
+            if(args.length > 0)
+                _Kernel.readFile(args[0]);
+
+            else
+                _StdOut.putText("Usage - read <string>");
+        }
+
+        public shellDelete(args)
+        {
+            if(args.length > 0)
+                _Kernel.deleteFile(args[0]);
+
+            else
+                _StdOut.putText("Usage - delete <string>");
+        }
+
+        public shellList(args)
+        {
+                _Kernel.listFiles();
+        }
+
+        public shellFormat(args)
+        {
+            _Kernel.formatDrive();
+        }
+
+        public shellSetSchedule(args)
+        {
+            var type : number;
+            var rr;
+            var pr;
+            var fjf;
+
+            if(args == null) {
+                _StdOut.putText("Scheduler methods: (rr = round robin, pr = priority, & fjf = first job first")
+                _StdOut.putText("Usage - setSchedule <string>")
+            }
+            else if(args == pr) {
+                type = 2;
+                //_SchedulingMethod = 2;
+                _KernelInterruptQueue.enqueue(new Interrupt(SET_SCHEDULE_IRQ, type));
+                _StdOut.putText("Scheduler set to Priority.");
+
+            }
+            else if(args == fjf) {
+                type = 1;
+               // _SchedulingMethod = 1;
+                _KernelInterruptQueue.enqueue(new Interrupt(SET_SCHEDULE_IRQ, type));
+                _StdOut.putText("Scheduler set to First Job First.");
+
+            }
+            else{
+                type = 0;
+               // _SchedulingMethod = 0;
+                _KernelInterruptQueue.enqueue(new Interrupt(SET_SCHEDULE_IRQ, type));
+                _StdOut.putText("Scheduler set to Round Robin.");
+            }
+        }
+
+        public shellGetSchedule(args)
+        {
+            _Kernel.getSchedule();
         }
 
     }

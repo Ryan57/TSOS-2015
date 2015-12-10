@@ -2,7 +2,7 @@
 var TSOS;
 (function (TSOS) {
     var PCB = (function () {
-        function PCB(PID, PC, accumulator, xReg, yReg, zFlag, base, limit, timeStamp) {
+        function PCB(PID, PC, accumulator, xReg, yReg, zFlag, base, limit, onHD, timeStamp, priority) {
             if (PID === void 0) { PID = 0; }
             if (PC === void 0) { PC = 0; }
             if (accumulator === void 0) { accumulator = 0; }
@@ -11,7 +11,9 @@ var TSOS;
             if (zFlag === void 0) { zFlag = 0; }
             if (base === void 0) { base = 0; }
             if (limit === void 0) { limit = 0; }
+            if (onHD === void 0) { onHD = false; }
             if (timeStamp === void 0) { timeStamp = new Date(); }
+            if (priority === void 0) { priority = 10; }
             this.PID = PID;
             this.PC = PC;
             this.accumulator = accumulator;
@@ -20,7 +22,9 @@ var TSOS;
             this.zFlag = zFlag;
             this.base = base;
             this.limit = limit;
+            this.onHD = onHD;
             this.timeStamp = timeStamp;
+            this.priority = priority;
         }
         PCB.prototype.toString = function () {
             return "PID: " + this.PID.toString() + " PC: " + this.PC.toString() + " Acc: " + this.accumulator.toString() +

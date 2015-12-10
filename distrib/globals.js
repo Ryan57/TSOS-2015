@@ -30,6 +30,25 @@ var EXECUTE_ALL_PROCESSES_IRQ = 12;
 var CREATE_ALL_PROCESSES_IRQ = 13;
 var QUANTUM_CHANGE_IRQ = 14;
 var CLEAR_PARTITION_IRQ = 15;
+var CREATE_FILE_IRQ = 16;
+var WRITE_FILE_IRQ = 17;
+var READ_FILE_IRQ = 18;
+var DELETE_FILE_IRQ = 19;
+var LIST_FILES_IRQ = 20;
+var FORMAT_IRQ = 21;
+var SET_SCHEDULE_IRQ = 22;
+var GET_SCHEDULE_IRQ = 23;
+//..
+// HDriveDeviceDriver Error Codes
+//..
+var HDD_NOT_FORMATTED = 200;
+var HDD_FILE_NAME_TO_LONG = 201;
+var HDD_FILE_DIR_FULL = 202;
+var HDD_FILE_NAME_DUPLICATE = 203;
+var HDD_DRIVE_FULL = 204;
+var HDD_SUCCESS = 205;
+var HDD_FILE_NOT_FOUND = 206;
+var HDD_DATA_CORRUPTED = 207;
 //
 // Global Variables
 // TODO: Make a global object and use that instead of the "_" naming convention in the global namespace.
@@ -39,6 +58,11 @@ var _MemoryManager;
 var _MemMax = 768;
 var _MemPartitionSize = 256;
 var _Scheduler;
+var ROUND_ROBIN = 0;
+var FIRST_JOB_FIRST = 1;
+var PRIORITY = 2;
+var _SchedulingMethod = ROUND_ROBIN;
+var _HardDrive;
 var _pcb;
 var _timerOn = false;
 var _timerCount = 0;
@@ -53,6 +77,8 @@ var _DefaultFontFamily = "sans"; // Ignored, I think. The was just a place-holde
 var _DefaultFontSize = 13;
 var _FontHeightMargin = 4; // Additional space added to font size when advancing a line.
 var _Trace = true; // Default the OS trace to be on.
+var _TraceMode = false;
+var _NextStep = false;
 // The OS Kernel and its queues.
 var _Kernel;
 var _KernelInterruptQueue; // Initializing this to null (which I would normally do) would then require us to specify the 'any' type, as below.
