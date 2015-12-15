@@ -119,7 +119,7 @@ var TSOS;
                     _StdIn.handleInput();
                     break;
                 case CREATE_PROCESS_IRQ:
-                    var pcb = _Scheduler.createProcess(params);
+                    var pcb = _Scheduler.createProcess(params[0], params[1]);
                     if (pcb == null)
                         _OsShell.outPutMsg("Process is already loaded. ");
                     else
@@ -238,6 +238,7 @@ var TSOS;
                         case PRIORITY:
                             _timerOn = false;
                             _SchedulingMethod = PRIORITY;
+                            _Scheduler.sortQueuePriority();
                             break;
                         default:
                             break;
@@ -246,10 +247,13 @@ var TSOS;
                 case GET_SCHEDULE_IRQ:
                     switch (_SchedulingMethod) {
                         case ROUND_ROBIN:
+                            _OsShell.outPutMsg("Scheduler set to Round Robin.");
                             break;
                         case FIRST_JOB_FIRST:
+                            _OsShell.outPutMsg("Scheduler set to First Job First.");
                             break;
                         case PRIORITY:
+                            _OsShell.outPutMsg("Scheduler set to Priority.");
                             break;
                     }
                     break;
@@ -372,8 +376,11 @@ var TSOS;
         Kernel.prototype.terminateProcessFromPID = function (PID) {
             _KernelInterruptQueue.enqueue(new Interrupt(TERMINATE_PROCESS_IRQ, PID));
         };
-        Kernel.prototype.loadAll = function (input) {
-            _KernelInterruptQueue.enqueue(new Interrupt(CREATE_ALL_PROCESSES_IRQ, input));
+        Kernel.prototype.load = function (input, priority) {
+            _KernelInterruptQueue.enqueue(new Interrupt(CREATE_PROCESS_IRQ, [input, priority]));
+        };
+        Kernel.prototype.loadAll = function (input, priority) {
+            _KernelInterruptQueue.enqueue(new Interrupt(CREATE_ALL_PROCESSES_IRQ, [input, priority]));
         };
         Kernel.prototype.runAll = function () {
             _KernelInterruptQueue.enqueue(new Interrupt(EXECUTE_ALL_PROCESSES_IRQ, null));

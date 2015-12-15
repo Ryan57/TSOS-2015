@@ -277,8 +277,10 @@ module TSOS {
             hdr.insertCell().innerHTML = '<b>' + 'Z Flag' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Base' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
-            hdr.insertCell().innerHTML = '<b>' + 'TimeStamp' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Priority' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Time' + '</b>';
 
+            row.insertCell().innerHTML = "&nbsp";
             row.insertCell().innerHTML = "&nbsp";
             row.insertCell().innerHTML = "&nbsp";
             row.insertCell().innerHTML = "&nbsp";
@@ -304,11 +306,12 @@ module TSOS {
             var Zflag = "&nbsp";
             var base = "&nbsp";
             var limit = "&nbsp";
+            var priority = "&nbsp";
             var timeStamp = "&nbsp";
 
             if(_Scheduler.processRunning != null)
             {
-                PID = TSOS.Utils.padWithZeros(_Scheduler.processRunning.PID.toString(16),2);
+                PID = TSOS.Utils.padWithZeros(_Scheduler.processRunning.PID.toString(),2);
                 PC = TSOS.Utils.padWithZeros(_Scheduler.processRunning.PC.toString(16),2);
                 Acc = TSOS.Utils.padWithZeros(_Scheduler.processRunning.accumulator.toString(16),2);
                 Xreg = TSOS.Utils.padWithZeros(_Scheduler.processRunning.xReg.toString(16),2);
@@ -316,6 +319,7 @@ module TSOS {
                 Zflag = TSOS.Utils.padWithZeros(_Scheduler.processRunning.zFlag.toString(16),2);
                 base = TSOS.Utils.padWithZeros(_Scheduler.processRunning.base.toString(16),4);
                 limit = TSOS.Utils.padWithZeros(_Scheduler.processRunning.limit.toString(16),4);
+                priority = TSOS.Utils.padWithZeros(_Scheduler.processRunning.priority.toString(),2);
                 timeStamp = TSOS.Utils.formatTimeString(_Scheduler.processRunning.timeStamp);
 
 
@@ -330,7 +334,8 @@ module TSOS {
             (<HTMLTableCellElement>row.cells.item(5)).innerHTML = Zflag;
             (<HTMLTableCellElement>row.cells.item(6)).innerHTML = base;
             (<HTMLTableCellElement>row.cells.item(7)).innerHTML = limit;
-            (<HTMLTableCellElement>row.cells.item(8)).innerHTML = timeStamp;
+            (<HTMLTableCellElement>row.cells.item(8)).innerHTML = priority;
+            (<HTMLTableCellElement>row.cells.item(9)).innerHTML = timeStamp;
 
         }
 
@@ -350,7 +355,7 @@ module TSOS {
             hdr.insertCell().innerHTML = '<b>' + 'Limit' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'OnHD' + '</b>';
             hdr.insertCell().innerHTML = '<b>' + 'Priority' + '</b>';
-            hdr.insertCell().innerHTML = '<b>' + 'TimeStamp' + '</b>';
+            hdr.insertCell().innerHTML = '<b>' + 'Time' + '</b>';
 
             row.insertCell().innerHTML = "&nbsp";
             row.insertCell().innerHTML = "&nbsp";
@@ -398,17 +403,15 @@ module TSOS {
             var insert = 0;
             var rowIndex = 2;
             var endOfRows = false;
-   _Kernel.krnTrace("CTRL - redQ before " + tbl.rows.length.toString());
 
             while(tbl.rows.length > 1){
                 tbl.deleteRow(tbl.rows.length - 1);
             }
- _Kernel.krnTrace("CTRL - redQ after " + _Scheduler.readyQueue.getSize().toString());
 
             for (var i = 0; i < _Scheduler.readyQueue.getSize(); i++) {
                 PCB = _Scheduler.readyQueue.q[i];
                 row = (<HTMLTableRowElement>tbl.insertRow());
-                (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padWithZeros(PCB.PID.toString(16), 2);
+                (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padWithZeros(PCB.PID.toString(), 2);
                 (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padWithZeros(PCB.PC.toString(16), 2);
                 (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padWithZeros(PCB.accumulator.toString(16), 2);
                 (<HTMLTableCellElement>row.insertCell()).innerHTML = TSOS.Utils.padWithZeros(PCB.xReg.toString(16), 2);

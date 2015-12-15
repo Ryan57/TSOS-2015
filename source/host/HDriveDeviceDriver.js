@@ -56,7 +56,6 @@ var TSOS;
             if (fName.length > 60)
                 return HDD_FILE_NAME_TO_LONG;
             var DIRblock = this.findNextFileDIRblock();
-            _Kernel.krnTrace(DIRblock.location);
             if (DIRblock == null)
                 return HDD_FILE_DIR_FULL;
             if (this.isDuplicateFileName(fName) == true)
@@ -153,9 +152,7 @@ var TSOS;
                 temp = [];
                 for (var i = totalBytesWritten; i < data.length; i++)
                     temp.push(data[i]);
-                _Kernel.krnTrace("WTB - write " + temp.toString());
                 bytesWritten = currFileBlock.setData(temp, true);
-                _Kernel.krnTrace("WTB - data " + currFileBlock.data.toString());
                 currFileBlock.saveBlock();
                 totalBytesWritten += bytesWritten;
                 if (totalBytesWritten < data.length) {
@@ -315,7 +312,6 @@ var TSOS;
                 for (var b = 1; (b < this.secBlock) && (found != true); b++) {
                     currFileBlock.loadBlock(0, s, b);
                     if (currFileBlock.inUse == true) {
-                        _Kernel.krnTrace(currFileBlock.getText() + " fname " + name);
                         if (currFileBlock.getText() == name) {
                             found = true;
                         }

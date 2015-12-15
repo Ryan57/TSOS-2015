@@ -54,7 +54,7 @@ var TSOS;
             }
             return retPCB;
         };
-        scheduler.prototype.createProcess = function (progInput) {
+        scheduler.prototype.createProcess = function (progInput, priority) {
             // Load program, and get pcb. If program already loaded,
             // pcb is null
             var PcB = _MemoryManager.loadProgram(progInput, this.nextPID);
@@ -79,14 +79,10 @@ var TSOS;
                         else {
                             byte = '0';
                         }
-                        _Kernel.krnTrace("Sched- byte " + byte);
                         var num = parseInt(byte, 16);
-                        _Kernel.krnTrace("Sched- num " + num.toString());
                         data.push(parseInt(byte, 16));
                     }
-                    _Kernel.krnTrace("before CSF " + data.toString());
                     ret = this.createSwapFile(data, this.nextPID);
-                    _Kernel.krnTrace("after CSF " + ret.toString());
                     if (ret != HDD_SUCCESS)
                         return null;
                     PcB.onHD = true;
@@ -95,9 +91,10 @@ var TSOS;
                 else
                     return null;
             }
+            PcB.priority = priority;
             this.residentQueue.enqueue(PcB);
             // Send trace message
-            _Kernel.krnTrace("Created process with PID " + this.nextPID + ".");
+            _Kernel.krnTrace("Created process with PID " + PcB.PID + ".");
             // Increment nextPID
             this.nextPID++;
             // Return true
@@ -124,9 +121,7 @@ var TSOS;
             if (ret2[0] != HDD_SUCCESS)
                 return ret2[0];
             data = ret2[1];
-            _Kernel.krnTrace("before LSF- load " + partition.toString());
             _MemoryManager.loadProgramBytes(data, partition);
-            _Kernel.krnTrace("after LSF- load ");
             _HardDrive.deleteFile(fileName, false);
             return HDD_SUCCESS;
         };
@@ -147,29 +142,20 @@ var TSOS;
             var PCB = this.removeFromResQueue(pid);
             if (PCB == null)
                 return false;
-            this.readyQueue.enqueue(PCB);
+            if (_SchedulingMethod == PRIORITY)
+                this.priorityQueueAdd(PCB);
+            else
+                this.readyQueue.enqueue(PCB);
             TSOS.Control.updateReadyQueueTable();
             if (this.processRunning == null)
                 this.contextSwitch();
             else {
-                if (this.processRunning.priority < PCB.priority) {
+                if (this.processRunning.priority > PCB.priority) {
                     this.contextSwitch();
                 }
             }
-            // Copy all register values from pcb to cpu registers
-            /*    _CPU.Xreg = this.processRunning.xReg;
-                _CPU.Yreg = this.processRunning.yReg;
-                _CPU.Acc = this.processRunning.accumulator;
-                _CPU.PC = this.processRunning.PC;
-                _CPU.Zflag = this.processRunning.zFlag;
-                _CPU.base = this.processRunning.base;
-                _CPU.limit = this.processRunning.limit;
-                // Set loaded process to null
-    
-                // Set cpu.isExecuting to true
-                _CPU.isExecuting = true; */
             // Trace executed process by pid
-            _Kernel.krnTrace("Executed process with PID " + this.nextPID + ".");
+            _Kernel.krnTrace("Executed process with PID " + PCB.PID + ".");
             // Return true
             return true;
         };
@@ -190,7 +176,7 @@ var TSOS;
             }
             if (this.processRunning == null)
                 this.contextSwitch(); // Call context switch
-            _Kernel.krnTrace("Executed process with PID " + this.nextPID + "."); // Trace executed process by pid
+            _Kernel.krnTrace("Executed process with PID " + PCB.PID + "."); // Trace executed process by pid
             return processRunningCounter; // Return running process counter
         };
         scheduler.prototype.terminateProcess = function (pid) {
@@ -253,12 +239,10 @@ var TSOS;
                         }
                         else {
                         }
-                        _Kernel.krnTrace("CS - partition " + part.toString());
                         this.loadSwapFile(newPCB, part);
                         newPCB.onHD = false;
                         newPCB.base = _MemoryManager.partitionBaseAddress[part];
                         newPCB.limit = _MemPartitionSize;
-                        _Kernel.krnTrace("CS - base " + newPCB.base);
                         TSOS.Control.updateHDtable();
                     }
                     this.processRunning = newPCB;
@@ -269,18 +253,15 @@ var TSOS;
                     _CPU.Zflag = this.processRunning.zFlag;
                     _CPU.base = this.processRunning.base;
                     _CPU.limit = this.processRunning.limit;
-                    if (_SchedulingMethod == ROUND_ROBIN)
+                    if (_SchedulingMethod == ROUND_ROBIN && !_timerOn) {
                         _timerOn = true;
+                        _timerCount = 0;
+                    }
                     _CPU.isExecuting = true;
                 }
             }
             else {
                 if (this.readyQueue.getSize() > 0) {
-                    if (_SchedulingMethod != PRIORITY)
-                        this.readyQueue.enqueue(this.processRunning);
-                    else {
-                        this.priorityQueueAdd(this.processRunning);
-                    }
                     newPCB = this.readyQueue.dequeue();
                     if (newPCB.onHD == true) {
                         part = _MemoryManager.nextAvailPartitions();
@@ -290,8 +271,6 @@ var TSOS;
                             this.createSwapFile(data, ret[1].PID);
                             ret[1].onHD = true;
                             part = ret[0];
-                        }
-                        else {
                         }
                         // _Kernel.krnTrace("CS - partition " + part.toString());
                         this.loadSwapFile(newPCB, part);
@@ -309,35 +288,58 @@ var TSOS;
                     _CPU.Zflag = this.processRunning.zFlag;
                     _CPU.base = this.processRunning.base;
                     _CPU.limit = this.processRunning.limit;
-                    _timerOn = true;
+                    if (_SchedulingMethod == ROUND_ROBIN) {
+                        _timerOn = true;
+                        _timerCount = 0;
+                    }
                     _CPU.isExecuting = true;
                 }
                 else {
-                    _Kernel.krnTrace("this 2-2-1");
-                    _timerOn = false;
-                    _timerCount = 0;
+                    if (_timerOn == true) {
+                        _timerOn = false;
+                        _timerCount = 0;
+                    }
                     _CPU.isExecuting = false;
                 }
             }
             TSOS.Control.updateRunProcessTable();
             TSOS.Control.updateReadyQueueTable();
         };
+        scheduler.prototype.sortQueuePriority = function () {
+            var temp = [];
+            var low = 0;
+            var insert = null;
+            var pcb = null;
+            while (0 > this.readyQueue.getSize()) {
+                low = -1;
+                for (var i = 0; i < this.readyQueue.getSize(); i++) {
+                    pcb = this.readyQueue.q[i];
+                    if (low == -1 || low < pcb.priority) {
+                        low = pcb.priority;
+                        insert = pcb;
+                    }
+                }
+                temp.push(insert);
+                this.removeFromReadyQueue(insert.PID);
+            }
+            this.readyQueue.q = temp;
+        };
         scheduler.prototype.priorityQueueAdd = function (pcb) {
             var temp = [];
             var inserted = false;
-            for (var i = 0; i < this.residentQueue.getSize(); i++) {
-                if (!inserted && (pcb.priority < this.residentQueue.q[i].priority)) {
+            for (var i = 0; i < this.readyQueue.getSize(); i++) {
+                if (!inserted && (pcb.priority < this.readyQueue.q[i].priority)) {
                     temp.push(pcb);
                     inserted = true;
                     i = i - 1;
                 }
                 else {
-                    temp.push(this.residentQueue.q[i]);
+                    temp.push(this.readyQueue.q[i]);
                 }
             }
             if (!inserted)
                 temp.push(pcb);
-            this.residentQueue.q = temp;
+            this.readyQueue.q = temp;
         };
         scheduler.prototype.findPID = function (baseAddr) {
             var PID = -1;

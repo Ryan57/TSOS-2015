@@ -71,7 +71,7 @@ module TSOS
             return retPCB;
         }
 
-           public createProcess(progInput: string) : TSOS.PCB
+           public createProcess(progInput: string, priority : number) : TSOS.PCB
            {
 
                // Load program, and get pcb. If program already loaded,
@@ -104,17 +104,13 @@ module TSOS
                            else {
                                byte = '0';
                            }
-             _Kernel.krnTrace("Sched- byte " + byte);
 
                            var num = parseInt(byte, 16);
-            _Kernel.krnTrace("Sched- num " + num.toString());
 
                            data.push(parseInt(byte, 16));
                        }
 
-            _Kernel.krnTrace("before CSF " + data.toString());
                        ret = this.createSwapFile(data, this.nextPID);
-           _Kernel.krnTrace("after CSF " + ret.toString());
 
                        if(ret != HDD_SUCCESS)
                             return null;
@@ -125,10 +121,11 @@ module TSOS
                        return null;
                }
 
+               PcB.priority = priority;
                this.residentQueue.enqueue(PcB);
 
                // Send trace message
-               _Kernel.krnTrace("Created process with PID " + this.nextPID + ".");
+               _Kernel.krnTrace("Created process with PID " + PcB.PID + ".");
 
                // Increment nextPID
                this.nextPID++;
@@ -172,11 +169,7 @@ module TSOS
 
             data = ret2[1];
 
-         _Kernel.krnTrace("before LSF- load " + partition.toString());
-
             _MemoryManager.loadProgramBytes(data, partition);
-        _Kernel.krnTrace("after LSF- load ");
-
             _HardDrive.deleteFile(fileName, false);
 
             return HDD_SUCCESS;
@@ -209,7 +202,11 @@ module TSOS
             if(PCB == null)
                 return false;
 
-            this.readyQueue.enqueue(PCB);
+            if(_SchedulingMethod == PRIORITY)
+                this.priorityQueueAdd(PCB);
+            else
+                this.readyQueue.enqueue(PCB);
+
             TSOS.Control.updateReadyQueueTable();
 
 
@@ -217,28 +214,14 @@ module TSOS
                 this.contextSwitch();
 
             else {
-                if(this.processRunning.priority < PCB.priority)
+                if(this.processRunning.priority > PCB.priority)
                 {
                     this.contextSwitch();
                 }
             }
 
-
-            // Copy all register values from pcb to cpu registers
-        /*    _CPU.Xreg = this.processRunning.xReg;
-            _CPU.Yreg = this.processRunning.yReg;
-            _CPU.Acc = this.processRunning.accumulator;
-            _CPU.PC = this.processRunning.PC;
-            _CPU.Zflag = this.processRunning.zFlag;
-            _CPU.base = this.processRunning.base;
-            _CPU.limit = this.processRunning.limit;
-            // Set loaded process to null
-
-            // Set cpu.isExecuting to true
-            _CPU.isExecuting = true; */
-
             // Trace executed process by pid
-            _Kernel.krnTrace("Executed process with PID " + this.nextPID + ".");
+            _Kernel.krnTrace("Executed process with PID " + PCB.PID + ".");
             // Return true
             return true;
     }
@@ -267,7 +250,7 @@ module TSOS
             if(this.processRunning == null)
                 this.contextSwitch();                         // Call context switch
 
-            _Kernel.krnTrace("Executed process with PID " + this.nextPID + ".");    // Trace executed process by pid
+            _Kernel.krnTrace("Executed process with PID " + PCB.PID + ".");    // Trace executed process by pid
             return processRunningCounter;                                           // Return running process counter
         }
 
@@ -307,24 +290,20 @@ module TSOS
             return PCB;
         }
 
-        public contextSwitch()
-        {
+        public contextSwitch() {
             var newPCB = null;
             var oldPCB = null;
             var part = 0;
             var ret = null;
-            var data : number[] = null;
+            var data:number[] = null;
             var tempPCB = null;
             _Kernel.krnTrace("Performing context switch.");
 
-            if(this.processRunning != null)
-            {
-
-                if(this.readyQueue.getSize() > 0)
-                {
+            if (this.processRunning != null) {
+                if (this.readyQueue.getSize() > 0) {
 
                     this.processRunning.xReg = _CPU.Xreg;
-                    this.processRunning.yReg =  _CPU.Yreg;
+                    this.processRunning.yReg = _CPU.Yreg;
                     this.processRunning.accumulator = _CPU.Acc;
                     this.processRunning.PC = _CPU.PC;
                     this.processRunning.zFlag = _CPU.Zflag;
@@ -332,78 +311,20 @@ module TSOS
                     this.processRunning.limit = _CPU.limit;
 
                     oldPCB = this.processRunning;
-                    if(_SchedulingMethod != PRIORITY)
+                    if (_SchedulingMethod != PRIORITY)
 
                         this.readyQueue.enqueue(this.processRunning);
 
-                    else{
-                        this.priorityQueueAdd(this.processRunning);
-                    }
-                        newPCB = this.readyQueue.dequeue();
-
-
-
-                if(newPCB.onHD == true)
-                {
-                    part = _MemoryManager.nextAvailPartitions();
-
-                    if(part == -1)
-                    {
-                        ret = this.findLastPartition();
-                        data = _MemoryManager.getPartitionBytes(ret[0]);
-                        this.createSwapFile(data, ret[1].PID);
-
-                        ret[1].onHD = true;
-
-                        part = ret[0];
-                    }
                     else {
-                       // _MemoryManager.loadedPartitions[part] = true;
-                    }
-           _Kernel.krnTrace("CS - partition " + part.toString());
-                    this.loadSwapFile(newPCB, part);
-                    newPCB.onHD = false;
-                    newPCB.base = _MemoryManager.partitionBaseAddress[part];
-                    newPCB.limit = _MemPartitionSize;
-           _Kernel.krnTrace("CS - base " + newPCB.base);
-                    TSOS.Control.updateHDtable();
-
-                }
-                    this.processRunning = newPCB;
-
-
-                    _CPU.Xreg = this.processRunning.xReg;
-                    _CPU.Yreg = this.processRunning.yReg;
-                    _CPU.Acc = this.processRunning.accumulator;
-                    _CPU.PC = this.processRunning.PC;
-                    _CPU.Zflag = this.processRunning.zFlag;
-                    _CPU.base = this.processRunning.base;
-                    _CPU.limit = this.processRunning.limit;
-
-                    if(_SchedulingMethod == ROUND_ROBIN)
-                        _timerOn = true;
-                    _CPU.isExecuting = true;
-                }
-            }
-            else
-            {
-
-                if(this.readyQueue.getSize() > 0)
-                {
-                    if(_SchedulingMethod != PRIORITY)
-
-                        this.readyQueue.enqueue(this.processRunning);
-
-                    else{
                         this.priorityQueueAdd(this.processRunning);
                     }
                     newPCB = this.readyQueue.dequeue();
-                    if(newPCB.onHD == true)
-                    {
+
+
+                    if (newPCB.onHD == true) {
                         part = _MemoryManager.nextAvailPartitions();
 
-                        if(part == -1)
-                        {
+                        if (part == -1) {
                             ret = this.findLastPartition();
                             data = _MemoryManager.getPartitionBytes(ret[0]);
                             this.createSwapFile(data, ret[1].PID);
@@ -415,14 +336,58 @@ module TSOS
                         else {
                             // _MemoryManager.loadedPartitions[part] = true;
                         }
+                        this.loadSwapFile(newPCB, part);
+                        newPCB.onHD = false;
+                        newPCB.base = _MemoryManager.partitionBaseAddress[part];
+                        newPCB.limit = _MemPartitionSize;
+                        TSOS.Control.updateHDtable();
 
-          // _Kernel.krnTrace("CS - partition " + part.toString());
+                    }
+                    this.processRunning = newPCB;
+
+
+                    _CPU.Xreg = this.processRunning.xReg;
+                    _CPU.Yreg = this.processRunning.yReg;
+                    _CPU.Acc = this.processRunning.accumulator;
+                    _CPU.PC = this.processRunning.PC;
+                    _CPU.Zflag = this.processRunning.zFlag;
+                    _CPU.base = this.processRunning.base;
+                    _CPU.limit = this.processRunning.limit;
+
+                    if (_SchedulingMethod == ROUND_ROBIN  && !_timerOn) {
+                        _timerOn = true;
+                        _timerCount = 0;
+                    }
+                    _CPU.isExecuting = true;
+                }
+            }
+            else {
+
+                if (this.readyQueue.getSize() > 0)
+                {
+                    newPCB = this.readyQueue.dequeue();
+
+                    if (newPCB.onHD == true)
+                    {
+                        part = _MemoryManager.nextAvailPartitions();
+
+                        if (part == -1) {
+                            ret = this.findLastPartition();
+                            data = _MemoryManager.getPartitionBytes(ret[0]);
+                            this.createSwapFile(data, ret[1].PID);
+
+                            ret[1].onHD = true;
+
+                            part = ret[0];
+                        }
+
+                        // _Kernel.krnTrace("CS - partition " + part.toString());
 
                         this.loadSwapFile(newPCB, part);
                         newPCB.onHD = false;
                         newPCB.base = _MemoryManager.partitionBaseAddress[part];
                         newPCB.limit = _MemPartitionSize;
-        //  _Kernel.krnTrace("CS - base " + newPCB.base);
+                        //  _Kernel.krnTrace("CS - base " + newPCB.base);
 
                         TSOS.Control.updateHDtable();
 
@@ -437,42 +402,75 @@ module TSOS
                     _CPU.base = this.processRunning.base;
                     _CPU.limit = this.processRunning.limit;
 
-                    _timerOn = true;
-                    _CPU.isExecuting = true;
-                }
-                else
-                {
-                    _Kernel.krnTrace("this 2-2-1");
+                    if (_SchedulingMethod == ROUND_ROBIN) {
+                        _timerOn = true;
+                        _timerCount = 0;
+                    }
+                        _CPU.isExecuting = true;
 
-                    _timerOn = false;
-                    _timerCount = 0;
+                }
+                else {
+
+                    if (_timerOn == true) {
+                        _timerOn = false;
+                        _timerCount = 0;
+                    }
                     _CPU.isExecuting = false;
+
                 }
             }
             TSOS.Control.updateRunProcessTable();
             TSOS.Control.updateReadyQueueTable();
+        }
 
+        public sortQueuePriority(): void
+        {
+            var temp : any[] = [];
+            var low : number = 0;
+            var insert : TSOS.PCB = null;
+            var pcb : TSOS.PCB = null;
+
+            while(0 > this.readyQueue.getSize())
+            {
+                low = -1;
+
+                for(var i = 0; i < this.readyQueue.getSize(); i++)
+                {
+                    pcb = this.readyQueue.q[i];
+
+                    if(low == -1 || low < pcb.priority)
+                    {
+                        low = pcb.priority;
+
+                        insert = pcb;
+                    }
+                }
+                temp.push(insert);
+                this.removeFromReadyQueue(insert.PID);
+            }
+
+            this.readyQueue.q = temp;
         }
 
         public priorityQueueAdd(pcb : TSOS.PCB)
         {
             var temp : any[] = [];
             var inserted = false;
-            for(var i = 0; i < this.residentQueue.getSize(); i++){
-                if(!inserted && (pcb.priority < this.residentQueue.q[i].priority)){
+            for(var i = 0; i < this.readyQueue.getSize(); i++){
+                if(!inserted && (pcb.priority < this.readyQueue.q[i].priority)){
                     temp.push(pcb);
                     inserted = true;
                     i = i - 1;
                 }
                 else
                 {
-                    temp.push(this.residentQueue.q[i])
+                    temp.push(this.readyQueue.q[i])
                 }
             }
             if(!inserted)
                 temp.push(pcb);
 
-            this.residentQueue.q = temp;
+            this.readyQueue.q = temp;
         }
 
         public findPID(baseAddr: number) : number

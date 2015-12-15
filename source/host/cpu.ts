@@ -345,6 +345,7 @@ module TSOS {
                     this.invalidOpCode(inst);
                     break;
             }
+            if(_timerOn == true)
             _KernelInterruptQueue.enqueue(new Interrupt(TIMER_IRQ, null));
 
 

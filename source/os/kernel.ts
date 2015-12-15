@@ -138,7 +138,7 @@ module TSOS {
                     break;
 
                 case CREATE_PROCESS_IRQ:
-                     var pcb : TSOS.PCB = _Scheduler.createProcess(params);
+                     var pcb : TSOS.PCB = _Scheduler.createProcess(params[0], params[1]);
                     if(pcb == null)
                         _OsShell.outPutMsg("Process is already loaded. ");
                     else
@@ -292,6 +292,7 @@ module TSOS {
                             _timerOn = false;
 
                             _SchedulingMethod = PRIORITY;
+                            _Scheduler.sortQueuePriority();
                             break;
 
                         default :
@@ -304,10 +305,13 @@ module TSOS {
                     switch (_SchedulingMethod)
                     {
                         case ROUND_ROBIN:
+                            _OsShell.outPutMsg("Scheduler set to Round Robin.");
                             break;
                         case FIRST_JOB_FIRST:
+                            _OsShell.outPutMsg("Scheduler set to First Job First.");
                             break;
                         case PRIORITY:
+                            _OsShell.outPutMsg("Scheduler set to Priority.");
                             break;
                     }
                     break;
@@ -464,9 +468,14 @@ module TSOS {
             _KernelInterruptQueue.enqueue(new Interrupt(TERMINATE_PROCESS_IRQ,PID));
         }
 
-        public loadAll(input : string): void
+        public load(input : string, priority : number): void
         {
-            _KernelInterruptQueue.enqueue(new Interrupt(CREATE_ALL_PROCESSES_IRQ,input));
+            _KernelInterruptQueue.enqueue(new Interrupt(CREATE_PROCESS_IRQ,[input, priority]));
+        }
+
+        public loadAll(input : string, priority : number): void
+        {
+            _KernelInterruptQueue.enqueue(new Interrupt(CREATE_ALL_PROCESSES_IRQ,[input, priority]));
         }
 
         public runAll(): void

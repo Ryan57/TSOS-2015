@@ -181,12 +181,12 @@ module TSOS {
             this.commandList[this.commandList.length] = sc;
 
             sc = new ShellCommand(this.shellSetSchedule,
-                "setSchedule",
-                "<int>- Sets the scheduling method.");
+                "setschedule",
+                "<String>- Sets the scheduling method.");
             this.commandList[this.commandList.length] = sc;
 
             sc = new ShellCommand(this.shellGetSchedule,
-                "getSchedule",
+                "getschedule",
                 "- Gets the current scheduling method being used.");
             this.commandList[this.commandList.length] = sc;
 
@@ -540,11 +540,6 @@ module TSOS {
         public shellLoad(args) {
             var input : string = (<HTMLInputElement>document.getElementById("taProgramInput")).value;
 
-            if(args.length == 0)
-                _pcb.priority = 10;
-            else
-                _pcb.priority = args;
-
             if( input.trim().length == 0)
                 _StdOut.putText("No program input found");
             else if( input.match("[^a-f|A-F|0-9| ]+"))
@@ -581,18 +576,32 @@ module TSOS {
                             stdInput += ' ';
                         stdInput += byte;
                     }
+                    var priority = 10;
+                    var error = false;
 
+                    if(args.length > 0)
+                    {
+                        priority = parseInt(args[0])
+
+                        if(priority < 0) {
+                            priority = 0 - priority;
+                            _StdOut.putText("Cannot take negative priority values.");
+
+                            error = true;
+                        }
+
+
+
+                    }
+                    if(!error)
                     // Send the create process interrupt
-                    _KernelInterruptQueue.enqueue(new Interrupt(CREATE_PROCESS_IRQ,stdInput));
+                    _Kernel.load(stdInput, priority);
                 }
             }
         }
 
         public shellLoadAll(args) {
             var input:string = (<HTMLInputElement>document.getElementById("taProgramInput")).value;
-
-            if(args.length == 0)
-                _pcb.priority = 10;
 
             if (input.trim().length == 0)
                 _StdOut.putText("No program input found");
@@ -628,8 +637,27 @@ module TSOS {
                         stdInput += byte;
                     }
 
+                    var priority = 10;
+                    var error = false;
+
+                    if(args.length > 0)
+                    {
+                        priority = parseInt(args[0])
+
+                        if(priority < 0) {
+                            priority = 0 - priority;
+                            _StdOut.putText("Cannot take negative priority values.");
+
+                            error = true;
+                        }
+
+
+
+                    }
+                    if(!error)
+
                     // Send the create process interrupt
-                    _Kernel.loadAll(input);
+                    _Kernel.loadAll(input, priority);
                 }
             }
         }
@@ -737,34 +765,37 @@ module TSOS {
         public shellSetSchedule(args)
         {
             var type : number;
-            var rr;
-            var pr;
-            var fjf;
+            var rr = "rr";
+            var pr = "pr";
+            var fjf = "fjf";
 
-            if(args == null) {
+            if(args.length <= 0) {
                 _StdOut.putText("Scheduler methods: (rr = round robin, pr = priority, & fjf = first job first")
                 _StdOut.putText("Usage - setSchedule <string>")
             }
-            else if(args == pr) {
-                type = 2;
+            else if(args[0] == pr) {
+                type = PRIORITY;
                 //_SchedulingMethod = 2;
                 _KernelInterruptQueue.enqueue(new Interrupt(SET_SCHEDULE_IRQ, type));
                 _StdOut.putText("Scheduler set to Priority.");
 
             }
-            else if(args == fjf) {
-                type = 1;
+            else if(args[0] == fjf) {
+                type = FIRST_JOB_FIRST;
                // _SchedulingMethod = 1;
                 _KernelInterruptQueue.enqueue(new Interrupt(SET_SCHEDULE_IRQ, type));
                 _StdOut.putText("Scheduler set to First Job First.");
 
             }
-            else{
-                type = 0;
+            else if(args[0] == rr) {
+                type = ROUND_ROBIN;
                // _SchedulingMethod = 0;
                 _KernelInterruptQueue.enqueue(new Interrupt(SET_SCHEDULE_IRQ, type));
                 _StdOut.putText("Scheduler set to Round Robin.");
             }
+            else{
+                _StdOut.putText("Scheduler methods: (rr = round robin, pr = priority, & fjf = first job first")
+                _StdOut.putText("Usage - setSchedule <string>")            }
         }
 
         public shellGetSchedule(args)

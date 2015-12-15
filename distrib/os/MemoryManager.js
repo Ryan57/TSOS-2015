@@ -92,7 +92,6 @@ var TSOS;
                     found = true;
                 }
             }
-            _Kernel.krnTrace("partition " + partition.toString());
             if (!found)
                 return null;
             // if (this.loadedPCB != null)
@@ -103,12 +102,10 @@ var TSOS;
             var base = this.partitionBaseAddress[partition];
             var limit = base + _MemPartitionSize;
             var byteIndex = 0;
-            _Kernel.krnTrace("len" + bytes.length.toString());
             for (var i = base; (byteIndex < bytes.length) && (i < limit); i++) {
                 value = parseInt(bytes[byteIndex], 16);
                 _Memory.setMem(value, i);
                 byteIndex++;
-                _Kernel.krnTrace("index, value " + i.toString() + "," + value.toString(16));
             }
             var PcB = new TSOS.PCB(pid);
             PcB.base = this.partitionBaseAddress[partition];
@@ -125,10 +122,8 @@ var TSOS;
             this.clrPartition(partition);
             var base = this.partitionBaseAddress[partition];
             var limit = base + _MemPartitionSize;
-            _Kernel.krnTrace("base " + base.toString() + " part " + partition.toString());
             var byteIndex = 0;
             for (var i = base; (byteIndex < prog.length) && (i < limit); i++) {
-                _Kernel.krnTrace("Index " + i.toString() + " value " + prog[byteIndex].toString());
                 _Memory.setMem(prog[byteIndex], i);
                 byteIndex++;
             }

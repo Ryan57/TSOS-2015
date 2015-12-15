@@ -277,7 +277,8 @@ var TSOS;
                     this.invalidOpCode(inst);
                     break;
             }
-            _KernelInterruptQueue.enqueue(new TSOS.Interrupt(TIMER_IRQ, null));
+            if (_timerOn == true)
+                _KernelInterruptQueue.enqueue(new TSOS.Interrupt(TIMER_IRQ, null));
             TSOS.Control.updateMemTable();
             TSOS.Control.updateCPUTable();
         };

@@ -79,7 +79,7 @@ module TSOS {
                 return HDD_FILE_NAME_TO_LONG;
 
             var DIRblock : TSOS.FileBlock = this.findNextFileDIRblock();
-           _Kernel.krnTrace(DIRblock.location);
+
 
 
             if(DIRblock == null)
@@ -234,9 +234,7 @@ module TSOS {
                 for(var i = totalBytesWritten; i < data.length; i++)
                     temp.push(data[i]);
 
-          _Kernel.krnTrace("WTB - write " + temp.toString());
                 bytesWritten = currFileBlock.setData(temp, true);
-          _Kernel.krnTrace("WTB - data " + currFileBlock.data.toString());
 
                 currFileBlock.saveBlock();
 
@@ -469,7 +467,6 @@ module TSOS {
 
                     if(currFileBlock.inUse == true)
                     {
-                        _Kernel.krnTrace(currFileBlock.getText() + " fname " + name);
                         if(currFileBlock.getText() == name)
                         {
                             found = true;
