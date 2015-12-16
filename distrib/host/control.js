@@ -96,13 +96,13 @@ var TSOS;
         Control.traceMode_click = function (btn) {
             if (_TraceMode) {
                 _TraceMode = false;
-                document.getElementById("btnTrace").value = "TraceModeOn";
+                document.getElementById("btnTrace").value = "TraceOn";
                 document.getElementById("btnStep").disabled = true;
                 _NextStep = false;
             }
             else {
                 _TraceMode = true;
-                document.getElementById("btnTrace").value = "TraceModeOff";
+                document.getElementById("btnTrace").value = "TraceOff";
                 document.getElementById("btnStep").disabled = false;
                 _NextStep = false;
             }
@@ -129,8 +129,8 @@ var TSOS;
         };
         Control.hostCurStat = function (status) {
             var curDate = new Date();
-            document.getElementById("statusdisplay").innerHTML = curDate.toDateString() + " "
-                + curDate.toTimeString() + " OS Status- " + status;
+            document.getElementById("statusdisplay").innerHTML = "Date- " + curDate.toDateString() + " __|__ Time- "
+                + curDate.toTimeString().substring(0, 7) + " __|__ OS Status- " + status;
         };
         Control.createMemTable = function () {
             var memHeader = 0;

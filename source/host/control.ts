@@ -126,13 +126,13 @@ module TSOS {
             if(_TraceMode)
             {
                 _TraceMode = false;
-                (<HTMLInputElement>document.getElementById("btnTrace")).value = "TraceModeOn";
+                (<HTMLInputElement>document.getElementById("btnTrace")).value = "TraceOn";
                 (<HTMLInputElement>document.getElementById("btnStep")).disabled = true;
                 _NextStep = false;
             }
             else {
                 _TraceMode = true;
-                (<HTMLInputElement>document.getElementById("btnTrace")).value = "TraceModeOff";
+                (<HTMLInputElement>document.getElementById("btnTrace")).value = "TraceOff";
                 (<HTMLInputElement>document.getElementById("btnStep")).disabled = false;
                 _NextStep = false;
 
@@ -165,10 +165,8 @@ module TSOS {
 
         public static hostCurStat(status:string):void {
             var curDate = new Date();
-            (<HTMLElement>document.getElementById("statusdisplay")).innerHTML = curDate.toDateString() + " "
-                + curDate.toTimeString() + " OS Status- " + status;
-
-
+            (<HTMLElement>document.getElementById("statusdisplay")).innerHTML = "Date- " + curDate.toDateString() + " __|__ Time- "
+                + curDate.toTimeString().substring(0, 7) +" __|__ OS Status- " + status;
         }
 
         public static createMemTable():void {

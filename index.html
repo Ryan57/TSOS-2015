@@ -8,6 +8,17 @@
         TSOS - a browser-based virtual Operating System in TypeScript
     </title>
 
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+
+    <!-- Latest compiled JavaScript -->
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+
+
+
     <!-- Globals CONSTANTS and _Variables. Must included be first. -->
     <script type="text/javascript" src="distrib/globals.js"></script>
 
@@ -40,7 +51,7 @@
     <script type="text/javascript" src="distrib/utils.js"></script>
     <!-- Uncomment this line below to enable GLaDOS testing -->
 
-     <script type="text/javascript" src="http://www.labouseur.com/courses/os/projects/glados.js"></script>
+     <!-- <script type="text/javascript" src="http://www.labouseur.com/courses/os/projects/glados.js"></script> -->
 </head>
 
 <body onload="onDocumentLoad()">
@@ -77,7 +88,7 @@
                id = "btnTrace"
                class="normal_button"
                disabled="disabled"
-               value="TraceModeOn"
+               value="TraceOn"
                tabindex="3"
                onclick="TSOS.Control.traceMode_click(this);">
         <input type="button"
@@ -87,32 +98,19 @@
                value="Step"
                tabindex="4"
                onclick="TSOS.Control.step_click(this);">
+
+        <label id="statusdisplay" style="display: inline-block; margin-left: 20px;">
+            Date & Time
+        </label>
     </div>
 
     <div id="divConsole" style="margin:4px; width:500px; height:500px; float:left;">
         <canvas id="display"
                 width="500px"
-                height="500px"
+                height="325px"
                 tabindex="3">
         </canvas>
 
-        <label id="statusdisplay" style="display: inline-block; width:450px;";>
-            Date & Time
-        </label>
-    </div>
-
-    <div id="left alligned items" style="float:left; margin-left: 4px">
-        <div id="divLog">
-            <label>
-                Host Log
-                <br>
-         <textarea name="taHostLog"
-                   id  ="taHostLog"
-                   rows="26"
-                   cols="48"
-                 ></textarea>
-            </label>
-        </div>
         <div id="divUserProgramInput">
             <label>
                 User Program Input
@@ -124,45 +122,83 @@
                  ></textarea>
             </label>
         </div>
+
     </div>
 
-    <div id="right alligned items" style="float:left; margin-left: 4px; width: 300px;">
-        <div id="divMemTable" style="margin:7px; height:200px; width:277px; background-color:white; overflow:auto;">
+    <div id="left alligned items" style="float:left; margin-left: 4px">
+        <div id="divLog">
             <label>
-                Memory
+                Host Log
+                <br>
+                <small>
+
+                   <textarea name="taHostLog"
+                   id  ="taHostLog"
+                   rows="26"
+                   cols="48"
+                 ></textarea>
+
+                </small>
             </label>
-            <br>
-            <table id="MemTable" background-color="white" border="2">
-            </table>
         </div>
-        <div id="divHardDriveTable" style="margin:7px; height:200px; width:277px; background-color:white; overflow:auto;">
-            <label>
-                HardDriveTable
-            </label>
-            <br>
-            <table id="HardDriveTable" background-color="white" border="2">
-            </table>
+
+    </div>
+
+    <div id="right alligned items" style="float:left; margin-left: 4px; width: 350px;">
+        <ul class="nav nav-tabs" id="Mem-HdList">
+            <li class="active" id="MemTab">
+                <a data-toggle="tab" href="#divMemTable">
+                    Memory
+                </a>
+            </li>
+            <li id="HdTab">
+                <a data-toggle="tab" href="#divHardDriveTable">
+                    HardDrive
+                </a>
+            </li>
+        </ul>
+        <div class="tab-content">
+            <div id="divMemTable" class="tab-pane fade in active" style="margin:7px; height:200px; width: 277px; background-color:white; overflow:auto;">
+                <label>
+                    Memory
+                </label>
+                <br>
+                <table id="MemTable" background-color="white" border="2" width="257px">
+                </table>
+            </div>
+            <div id="divHardDriveTable" class="tab-pane fade" style="margin:7px; height:200px; width:277px; background-color:white; overflow:auto;">
+                <label>
+                    HardDriveTable
+                </label>
+                <br>
+                <table id="HardDriveTable" background-color="white" border="2">
+                </table>
+            </div>
         </div>
-        <div id="divCPUReg" style="margin:7px">
-            <label>
-                CPU Registers
-            </label>
-            <br>
-            <table id="CPU" border="2" height="117">
-            </table>
-        </div>
+
+
         <div id="divRunningProcess" style="margin:7px;">
             <label>Running Process</label>
             <table id="RunningProcess" border="2">
             </table>
         </div>
 
-    </div>
+        <div id="divReadyQueue" style="margin: 7px;">
+            <label>
+                Ready Queue
+            </label>
+            <table id="ReadyQueue" border="2">
+            </table>
+        </div>
 
-    <div id="divReadyQueue" style="float:left; margin:7px; height:150px; width:525px;  overflow : auto;">
-        <label>Ready Queue</label>
-        <table id="ReadyQueue" border="2">
-        </table>
+        <div id="divCPUReg" style="margin-left: 7px">
+            <label>
+                CPU Registers
+            </label>
+            <br>
+            <table id="CPU" border="2" width="275">
+            </table>
+        </div>
     </div>
 
 </div>
